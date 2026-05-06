@@ -1,0 +1,346 @@
+<% layout('layout') %>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+
+<div class="space-y-4" id="analytics-root">
+
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <div>
+      <h1 class="text-lg font-bold text-slate-800">Analytics</h1>
+      <p class="text-slate-400 text-xs mt-0.5">Data performa channel YouTube Anda</p>
+    </div>
+    <div class="flex items-center gap-2 flex-wrap justify-end">
+      <!-- Channel Selector -->
+      <% if (typeof youtubeChannels !== 'undefined' && youtubeChannels.length > 0) { %>
+      <div class="relative">
+        <select id="channel-selector" onchange="onChannelChange(this.value)"
+          class="appearance-none bg-white border border-slate-200 text-slate-700 text-xs px-3 py-1.5 pr-8 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer">
+          <% youtubeChannels.forEach(function(ch) { %>
+            <option value="<%= ch.channel_id %>"><%= ch.channel_name %><%= ch.is_default ? ' ★' : '' %></option>
+          <% }) %>
+        </select>
+        <i class="ti ti-chevron-down absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+      </div>
+      <% } %>
+      <!-- Period Tabs -->
+      <div class="flex items-center bg-white border border-slate-200 rounded-lg p-1 gap-0.5">
+        <button onclick="setPeriod('7')"   id="tab-7"   class="period-tab px-3 py-1.5 rounded text-xs font-medium transition-all">7 Hari</button>
+        <button onclick="setPeriod('28')"  id="tab-28"  class="period-tab active px-3 py-1.5 rounded text-xs font-medium transition-all">28 Hari</button>
+        <button onclick="setPeriod('90')"  id="tab-90"  class="period-tab px-3 py-1.5 rounded text-xs font-medium transition-all">90 Hari</button>
+        <button onclick="setPeriod('365')" id="tab-365" class="period-tab px-3 py-1.5 rounded text-xs font-medium transition-all">1 Tahun</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alert -->
+  <div id="analytics-alert" class="hidden"></div>
+
+  <!-- Channel Bar -->
+  <div id="channel-bar" class="hidden bg-white rounded-lg border border-slate-200 px-4 py-2.5 flex items-center gap-3">
+    <img id="channel-thumb" class="w-7 h-7 rounded-full" src="" alt="">
+    <span id="channel-name" class="text-sm font-semibold text-slate-800"></span>
+    <span class="text-xs text-slate-300 mx-1">•</span>
+    <span class="text-[11px] text-slate-400" id="analytics-period-label"></span>
+  </div>
+
+  <!-- KPI Cards — 5 cards including Revenue -->
+  <div class="grid grid-cols-2 lg:grid-cols-5 gap-3">
+    <div class="bg-white rounded-lg border border-slate-200 px-4 py-3">
+      <div class="text-[11px] font-medium text-slate-500 mb-1 flex items-center gap-1"><i class="ti ti-eye text-sky-500"></i> Tayangan</div>
+      <div class="text-xl font-bold text-slate-800" id="kpi-views"><div class="animate-pulse bg-slate-100 h-6 w-16 rounded"></div></div>
+      <div class="text-[10px] text-slate-400 mt-0.5">Total views</div>
+    </div>
+    <div class="bg-white rounded-lg border border-slate-200 px-4 py-3">
+      <div class="text-[11px] font-medium text-slate-500 mb-1 flex items-center gap-1"><i class="ti ti-clock text-violet-500"></i> Jam Tonton</div>
+      <div class="text-xl font-bold text-slate-800" id="kpi-watchtime"><div class="animate-pulse bg-slate-100 h-6 w-16 rounded"></div></div>
+      <div class="text-[10px] text-slate-400 mt-0.5">Jam</div>
+    </div>
+    <div class="bg-white rounded-lg border border-slate-200 px-4 py-3">
+      <div class="text-[11px] font-medium text-slate-500 mb-1 flex items-center gap-1"><i class="ti ti-player-play text-amber-500"></i> Durasi Rata-rata</div>
+      <div class="text-xl font-bold text-slate-800" id="kpi-avgduration"><div class="animate-pulse bg-slate-100 h-6 w-16 rounded"></div></div>
+      <div class="text-[10px] text-slate-400 mt-0.5">Per tayangan</div>
+    </div>
+    <div class="bg-white rounded-lg border border-slate-200 px-4 py-3">
+      <div class="text-[11px] font-medium text-slate-500 mb-1 flex items-center gap-1"><i class="ti ti-users text-emerald-500"></i> Subscriber</div>
+      <div class="text-xl font-bold text-slate-800" id="kpi-subs"><div class="animate-pulse bg-slate-100 h-6 w-16 rounded"></div></div>
+      <div class="text-[10px] text-slate-400 mt-0.5">Gained (net)</div>
+    </div>
+    <div id="kpi-revenue-card" class="bg-white rounded-lg border border-slate-200 px-4 py-3">
+      <div class="text-[11px] font-medium text-slate-500 mb-1 flex items-center gap-1"><i class="ti ti-currency-dollar text-green-500"></i> Pendapatan</div>
+      <div class="text-xl font-bold text-slate-800" id="kpi-revenue"><div class="animate-pulse bg-slate-100 h-6 w-16 rounded"></div></div>
+      <div class="text-[10px] text-slate-400 mt-0.5" id="kpi-revenue-note">Est. USD</div>
+    </div>
+  </div>
+
+  <!-- Chart -->
+  <div class="bg-white rounded-lg border border-slate-200 p-4">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-sm font-semibold text-slate-800">Grafik Performa</h2>
+      <div class="flex items-center gap-1.5 flex-wrap">
+        <button onclick="switchMetric('views')"     id="metric-views"     class="metric-btn active text-xs px-3 py-1 rounded-full font-medium transition-all">Tayangan</button>
+        <button onclick="switchMetric('watchtime')" id="metric-watchtime" class="metric-btn text-xs px-3 py-1 rounded-full font-medium transition-all">Jam Tonton</button>
+        <button onclick="switchMetric('revenue')"   id="metric-revenue"   class="metric-btn text-xs px-3 py-1 rounded-full font-medium transition-all">Pendapatan</button>
+      </div>
+    </div>
+    <div class="relative h-52">
+      <canvas id="mainChart"></canvas>
+      <div id="chart-loader" class="absolute inset-0 flex items-center justify-center">
+        <i class="ti ti-loader animate-spin text-2xl text-slate-300"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Geo + Traffic -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <div class="bg-white rounded-lg border border-slate-200 p-4">
+      <h2 class="text-sm font-semibold text-slate-800 mb-4">Geografi</h2>
+      <div id="geo-table"><div class="flex items-center justify-center py-6 text-slate-300"><i class="ti ti-loader animate-spin text-xl"></i></div></div>
+    </div>
+    <div class="bg-white rounded-lg border border-slate-200 p-4">
+      <h2 class="text-sm font-semibold text-slate-800 mb-4">Sumber Lalu Lintas</h2>
+      <div id="traffic-section"><div class="flex items-center justify-center py-6 text-slate-300"><i class="ti ti-loader animate-spin text-xl"></i></div></div>
+    </div>
+  </div>
+
+  <!-- Top Videos -->
+  <div class="bg-white rounded-lg border border-slate-200 overflow-hidden">
+    <div class="px-4 py-3 border-b border-slate-100">
+      <h2 class="text-sm font-semibold text-slate-800">Video Teratas</h2>
+      <p class="text-[11px] text-slate-400">Berdasarkan jumlah tayangan dalam periode ini</p>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="min-w-full">
+        <thead class="bg-slate-50">
+          <tr>
+            <th class="px-4 py-2.5 text-left text-[11px] font-medium text-slate-400 uppercase">Video</th>
+            <th class="px-4 py-2.5 text-right text-[11px] font-medium text-slate-400 uppercase">Tayangan</th>
+            <th class="px-4 py-2.5 text-right text-[11px] font-medium text-slate-400 uppercase">Jam Tonton</th>
+            <th class="px-4 py-2.5 text-right text-[11px] font-medium text-slate-400 uppercase">Rata-rata</th>
+          </tr>
+        </thead>
+        <tbody id="top-videos-body" class="divide-y divide-slate-50">
+          <tr><td colspan="4" class="px-4 py-8 text-center"><i class="ti ti-loader animate-spin text-xl text-slate-300"></i></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<style>
+  .period-tab { color: #64748b; }
+  .period-tab.active { background: #0077B6; color: #fff; }
+  .metric-btn { background: #f1f5f9; color: #475569; }
+  .metric-btn.active { background: #0077B6; color: #fff; }
+</style>
+
+<script>
+(function() {
+  let currentPeriod = '28';
+  let currentMetric = 'views';
+  let currentChannelId = null;
+  let chartInstance = null;
+  let analyticsData = null;
+
+  const COUNTRY_NAMES = { ID:'Indonesia',US:'Amerika Serikat',MY:'Malaysia',SG:'Singapura',PH:'Filipina',IN:'India',GB:'Inggris',AU:'Australia',CA:'Kanada',JP:'Jepang',KR:'Korea Selatan',DE:'Jerman',FR:'Prancis',BR:'Brasil',TH:'Thailand',VN:'Vietnam',NL:'Belanda',SA:'Arab Saudi',AE:'UAE',EG:'Mesir',NG:'Nigeria',ZA:'Afrika Selatan',PK:'Pakistan',BD:'Bangladesh' };
+  const COUNTRY_FLAGS = { ID:'🇮🇩',US:'🇺🇸',MY:'🇲🇾',SG:'🇸🇬',PH:'🇵🇭',IN:'🇮🇳',GB:'🇬🇧',AU:'🇦🇺',CA:'🇨🇦',JP:'🇯🇵',KR:'🇰🇷',DE:'🇩🇪',FR:'🇫🇷',BR:'🇧🇷',TH:'🇹🇭',VN:'🇻🇳',NL:'🇳🇱',SA:'🇸🇦',AE:'🇦🇪',EG:'🇪🇬',NG:'🇳🇬',ZA:'🇿🇦',PK:'🇵🇰',BD:'🇧🇩' };
+  const TRAFFIC_LABELS = { YT_SEARCH:'Penelusuran YouTube',NO_LINK_EMBEDDED:'Tersemat',EXT_URL:'URL Eksternal',YT_OTHER_PAGE:'Halaman YT Lain',NOTIFICATION:'Notifikasi',SUBSCRIBER:'Feed Subscriber',PLAYLIST:'Playlist',ADVERTISING:'Iklan',END_SCREEN:'Layar Akhir',CARD:'Kartu',HASHTAG:'Hashtag',RELATED_VIDEO:'Video Terkait',SHORTS:'YouTube Shorts',NO_LINK_OTHER:'Lainnya' };
+
+  function fmt(n) { if(n===null||n===undefined)return'—'; if(n>=1e9)return(n/1e9).toFixed(1)+'M'; if(n>=1e6)return(n/1e6).toFixed(1)+'Jt'; if(n>=1e3)return(n/1e3).toFixed(1)+'rb'; return String(Math.round(n)); }
+  function fmtDur(s) { if(!s)return'0:00'; const m=Math.floor(s/60),sec=Math.round(s%60); return `${m}:${String(sec).padStart(2,'0')}`; }
+  function fmtHours(min) { if(!min)return'0'; const h=min/60; return h>=1000?fmt(h)+'j':h.toFixed(1)+' j'; }
+  function fmtUSD(v) { if(v===null||v===undefined)return'—'; return '$'+v.toFixed(2); }
+
+  window.onChannelChange = function(channelId) {
+    currentChannelId = channelId;
+    loadAnalytics();
+  };
+  window.setPeriod = function(p) {
+    currentPeriod = p;
+    document.querySelectorAll('.period-tab').forEach(b=>b.classList.remove('active'));
+    document.getElementById('tab-'+p).classList.add('active');
+    loadAnalytics();
+  };
+  window.switchMetric = function(m) {
+    currentMetric = m;
+    document.querySelectorAll('.metric-btn').forEach(b=>b.classList.remove('active'));
+    document.getElementById('metric-'+m).classList.add('active');
+    if(analyticsData) renderChart(analyticsData.daily, analyticsData.revenue);
+  };
+
+  function showAlert(type, msg) {
+    const el = document.getElementById('analytics-alert');
+    const c = {error:'bg-red-50 border-red-200 text-red-700',warn:'bg-amber-50 border-amber-200 text-amber-700'};
+    el.className=`rounded-lg border px-4 py-3 text-sm ${c[type]||c.warn}`;
+    el.innerHTML=`<div class="flex items-start gap-2"><i class="ti ti-alert-circle mt-0.5 flex-shrink-0"></i><div>${msg}</div></div>`;
+    el.classList.remove('hidden');
+  }
+  function hideAlert() { document.getElementById('analytics-alert').classList.add('hidden'); }
+
+  function resetLoaders() {
+    document.getElementById('chart-loader').classList.remove('hidden');
+    ['kpi-views','kpi-watchtime','kpi-avgduration','kpi-subs','kpi-revenue'].forEach(id=>{
+      document.getElementById(id).innerHTML='<div class="animate-pulse bg-slate-100 h-6 w-16 rounded"></div>';
+    });
+    ['geo-table','traffic-section'].forEach(id=>{
+      document.getElementById(id).innerHTML='<div class="flex items-center justify-center py-6 text-slate-300"><i class="ti ti-loader animate-spin text-xl"></i></div>';
+    });
+    document.getElementById('top-videos-body').innerHTML='<tr><td colspan="4" class="px-4 py-8 text-center"><i class="ti ti-loader animate-spin text-xl text-slate-300"></i></td></tr>';
+  }
+
+  function renderKPI(data) {
+    const h = data.summary.headers, row = data.summary.rows[0]||[];
+    const get = k => { const i=h.indexOf(k); return i>=0?row[i]:null; };
+    document.getElementById('kpi-views').textContent = fmt(get('views'));
+    document.getElementById('kpi-watchtime').textContent = fmtHours(get('estimatedMinutesWatched'));
+    document.getElementById('kpi-avgduration').textContent = fmtDur(get('averageViewDuration'));
+    const net = (get('subscribersGained')||0)-(get('subscribersLost')||0);
+    document.getElementById('kpi-subs').innerHTML = `<span class="${net>=0?'text-emerald-600':'text-red-600'}">${net>=0?'+':''}${fmt(net)}</span>`;
+
+    // Revenue
+    const rev = data.revenue;
+    const revEl = document.getElementById('kpi-revenue');
+    const revNote = document.getElementById('kpi-revenue-note');
+    if (rev && rev.supported && rev.total !== null) {
+      revEl.innerHTML = `<span class="text-green-600">${fmtUSD(rev.total)}</span>`;
+      revNote.textContent = 'Estimasi USD (iklan+premium)';
+    } else {
+      revEl.textContent = 'N/A';
+      revNote.innerHTML = '<span class="text-amber-500">Perlu monetisasi aktif</span>';
+    }
+  }
+
+  function renderChart(daily, revenue) {
+    const ctx = document.getElementById('mainChart');
+    document.getElementById('chart-loader').classList.add('hidden');
+    if (!ctx) return;
+    const h = daily.headers;
+    const dayIdx = h.indexOf('day');
+    const viewIdx = h.indexOf('views');
+    const wtIdx = h.indexOf('estimatedMinutesWatched');
+    const labels = daily.rows.map(r => new Date(r[dayIdx]).toLocaleDateString('id-ID',{day:'numeric',month:'short'}));
+
+    let values, label, color;
+    if (currentMetric === 'watchtime') {
+      values = daily.rows.map(r=>(r[wtIdx]||0)/60);
+      label = 'Jam Tonton'; color = '#7c3aed';
+    } else if (currentMetric === 'revenue') {
+      const rh = revenue.headers, revDayIdx = rh.indexOf('day'), revValIdx = rh.indexOf('estimatedRevenue');
+      const revMap = {};
+      revenue.rows.forEach(r => { revMap[r[revDayIdx]] = r[revValIdx]||0; });
+      values = daily.rows.map(r => revMap[r[dayIdx]] || 0);
+      label = 'Pendapatan (USD)'; color = '#16a34a';
+    } else {
+      values = daily.rows.map(r=>r[viewIdx]||0);
+      label = 'Tayangan'; color = '#0077B6';
+    }
+
+    if (chartInstance) chartInstance.destroy();
+    chartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{ label, data: values, borderColor: color, backgroundColor: color+'18', borderWidth: 2, tension: 0.4, fill: true, pointRadius: labels.length>60?0:3, pointHoverRadius:5, pointBackgroundColor:color }]
+      },
+      options: {
+        responsive:true, maintainAspectRatio:false,
+        plugins: { legend:{display:false}, tooltip:{ backgroundColor:'#1e293b', titleFont:{size:11}, bodyFont:{size:12,weight:'bold'}, padding:10, callbacks:{ label: ctx=>` ${currentMetric==='revenue'?'$'+parseFloat(ctx.raw).toFixed(2):fmt(parseFloat(ctx.raw))} ${label}` } } },
+        scales: {
+          x:{ grid:{display:false}, ticks:{font:{size:10},maxTicksLimit:10,color:'#94a3b8'} },
+          y:{ grid:{color:'#f1f5f9'}, ticks:{font:{size:10},color:'#94a3b8', callback:v=>currentMetric==='revenue'?'$'+v.toFixed(1):fmt(v)} }
+        }
+      }
+    });
+  }
+
+  function renderGeo(geo) {
+    const el = document.getElementById('geo-table');
+    if(!geo.rows.length){el.innerHTML='<p class="text-xs text-slate-400 text-center py-6">Tidak ada data geografi</p>';return;}
+    const h=geo.headers, cIdx=h.indexOf('country'), vIdx=h.indexOf('views');
+    const max=Math.max(...geo.rows.map(r=>r[vIdx]||0),1);
+    el.innerHTML=geo.rows.map(r=>{
+      const code=r[cIdx],views=r[vIdx]||0,pct=Math.round(views/max*100);
+      return `<div class="mb-2.5"><div class="flex items-center justify-between mb-1"><div class="flex items-center gap-2"><span class="text-base">${COUNTRY_FLAGS[code]||'🌍'}</span><span class="text-xs text-slate-700">${COUNTRY_NAMES[code]||code}</span></div><span class="text-xs font-semibold text-slate-600">${fmt(views)}</span></div><div class="w-full bg-slate-100 rounded-full h-1.5"><div class="h-1.5 rounded-full bg-primary transition-all duration-700" style="width:${pct}%"></div></div></div>`;
+    }).join('');
+  }
+
+  function renderTraffic(traffic) {
+    const el = document.getElementById('traffic-section');
+    if(!traffic.rows.length){el.innerHTML='<p class="text-xs text-slate-400 text-center py-6">Tidak ada data</p>';return;}
+    const h=traffic.headers, sIdx=h.indexOf('insightTrafficSourceType'), vIdx=h.indexOf('views');
+    const max=Math.max(...traffic.rows.map(r=>r[vIdx]||0),1);
+    const colors=['bg-sky-500','bg-violet-500','bg-emerald-500','bg-amber-500','bg-pink-500','bg-orange-500','bg-cyan-500','bg-indigo-500','bg-rose-500','bg-teal-500'];
+    el.innerHTML=traffic.rows.map((r,i)=>{
+      const src=r[sIdx],views=r[vIdx]||0,pct=Math.round(views/max*100);
+      return `<div class="mb-2.5"><div class="flex items-center justify-between mb-1"><span class="text-xs text-slate-700">${TRAFFIC_LABELS[src]||src}</span><span class="text-xs font-semibold text-slate-600">${fmt(views)}</span></div><div class="w-full bg-slate-100 rounded-full h-1.5"><div class="h-1.5 rounded-full ${colors[i%colors.length]} transition-all duration-700" style="width:${pct}%"></div></div></div>`;
+    }).join('');
+  }
+
+  function renderTopVideos(topVideos) {
+    const tbody = document.getElementById('top-videos-body');
+    if(!topVideos.rows.length){tbody.innerHTML='<tr><td colspan="4" class="px-4 py-8 text-center text-xs text-slate-400">Tidak ada data video</td></tr>';return;}
+    const h=topVideos.headers, viIdx=h.indexOf('video'), vIdx=h.indexOf('views'), wtIdx=h.indexOf('estimatedMinutesWatched'), avgIdx=h.indexOf('averageViewDuration');
+    tbody.innerHTML=topVideos.rows.map(r=>`
+      <tr class="hover:bg-slate-50 transition-colors">
+        <td class="px-4 py-3"><div class="flex items-center gap-3">
+          <img src="https://img.youtube.com/vi/${r[viIdx]}/default.jpg" class="w-12 h-8 object-cover rounded flex-shrink-0" onerror="this.style.display='none'" alt="">
+          <a href="https://youtu.be/${r[viIdx]}" target="_blank" class="text-xs text-primary hover:underline font-medium max-w-[150px] truncate block">${r[viIdx]}</a>
+        </div></td>
+        <td class="px-4 py-3 text-xs text-right font-semibold text-slate-700">${fmt(r[vIdx])}</td>
+        <td class="px-4 py-3 text-xs text-right text-slate-500">${((r[wtIdx]||0)/60).toFixed(1)}j</td>
+        <td class="px-4 py-3 text-xs text-right text-slate-500">${fmtDur(r[avgIdx])}</td>
+      </tr>`).join('');
+  }
+
+  async function loadAnalytics() {
+    hideAlert();
+    resetLoaders();
+    try {
+      const params = new URLSearchParams({ period: currentPeriod });
+      if (currentChannelId) params.set('channelId', currentChannelId);
+      const res = await fetch(`/api/analytics/youtube?${params}`);
+      const data = await res.json();
+
+      if (!data.success) {
+        if (data.noChannel) showAlert('warn','<strong>Channel YouTube belum terhubung.</strong> <a href="/settings?activeTab=integration" class="underline">Hubungkan di Settings → Integration</a>.');
+        else if (data.needsReauth) showAlert('error','<strong>Perlu login ulang YouTube</strong> untuk mengaktifkan scope Analytics. <a href="/settings?activeTab=integration" class="underline">Buka Settings</a>.');
+        else showAlert('error', data.error || 'Gagal mengambil data analytics.');
+        ['kpi-views','kpi-watchtime','kpi-avgduration','kpi-subs','kpi-revenue'].forEach(id=>document.getElementById(id).textContent='—');
+        ['geo-table','traffic-section'].forEach(id=>document.getElementById(id).innerHTML='<p class="text-xs text-slate-400 text-center py-6">Tidak ada data</p>');
+        document.getElementById('chart-loader').classList.add('hidden');
+        document.getElementById('top-videos-body').innerHTML='<tr><td colspan="4" class="px-4 py-8 text-center text-xs text-slate-400">Tidak ada data</td></tr>';
+        return;
+      }
+
+      analyticsData = data;
+
+      // Update channel selector if changed via API
+      const sel = document.getElementById('channel-selector');
+      if (sel && data.channelId) {
+        sel.value = data.channelId;
+        if (!currentChannelId) currentChannelId = data.channelId;
+      }
+
+      // Channel bar
+      const bar = document.getElementById('channel-bar');
+      bar.classList.remove('hidden');
+      const thumb = document.getElementById('channel-thumb');
+      if (data.channelThumbnail) { thumb.src = data.channelThumbnail; thumb.classList.remove('hidden'); } else thumb.classList.add('hidden');
+      document.getElementById('channel-name').textContent = data.channelName || '';
+      document.getElementById('analytics-period-label').textContent = `${data.startDate} — ${data.endDate}`;
+
+      renderKPI(data);
+      renderChart(data.daily, data.revenue);
+      renderGeo(data.geo);
+      renderTraffic(data.traffic);
+      renderTopVideos(data.topVideos);
+    } catch(e) {
+      console.error(e);
+      showAlert('error','Terjadi kesalahan saat memuat data analytics.');
+    }
+  }
+
+  loadAnalytics();
+})();
+</script>

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome - LaStream</title>
+  <link rel="icon" href="/images/logo.svg" type="image/svg+xml">
+  <link rel="preload" href="/images/logo.svg" as="image" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.30.0/tabler-icons.min.css">
+  <link rel="stylesheet" href="/css/styles.css">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        fontFamily: {
+          'inter': ['Inter', 'sans-serif'],
+          'sans': ['Inter', 'system-ui', 'sans-serif']
+        },
+        extend: {
+          colors: {
+            'primary': '#0077B6',
+            'secondary': '#005F8A',
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-inter">
+  <div class="min-h-screen flex flex-col items-center justify-center px-6 py-10">
+    <div class="w-full max-w-md text-center">
+      <div class="mb-8">
+        <img src="/images/logo_mobile.svg" alt="LaStream Logo" class="h-9 mx-auto mb-6">
+        <h1 class="text-3xl font-bold mb-3 text-slate-800">Welcome to LaStream</h1>
+      </div>
+      <div class="bg-white rounded-xl border border-slate-200 shadow-lg p-6 mb-6">
+        <div class="w-16 h-16 rounded-full bg-sky-50 flex items-center justify-center mx-auto mb-4">
+          <i class="ti ti-broadcast text-primary text-3xl"></i>
+        </div>
+        <p class="text-slate-600 text-sm mb-2 font-medium">
+          Kelola Live Streaming YouTube Lebih Mudah, Cepat, dan Profesional
+        </p>
+        <p class="text-slate-400 text-xs">
+          LaStream by Vaimoz
+        </p>
+      </div>
+      <div class="mb-4">
+        <p id="countdown-text" class="text-slate-400 text-sm">
+          Redirecting to dashboard in <span id="countdown">5</span> seconds...
+        </p>
+      </div>
+      <a href="/welcome/continue" class="inline-flex items-center justify-center text-primary hover:text-sky-700 font-medium transition-colors">
+        Go to Dashboard
+        <i class="ti ti-arrow-right ml-2"></i>
+      </a>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const icons = document.querySelectorAll('.ti');
+      icons.forEach(icon => {
+        icon.classList.add('font-loaded');
+      });
+
+      confetti({
+        particleCount: 50,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0 }
+      });
+      confetti({
+        particleCount: 50,
+        angle: 120,
+        spread: 55,
+        origin: { x: 1 }
+      });
+
+      let countdown = 5;
+      const countdownElement = document.getElementById('countdown');
+      const countdownTextElement = document.getElementById('countdown-text');
+      
+      const countdownInterval = setInterval(() => {
+        countdown--;
+        countdownElement.textContent = countdown;
+        
+        if (countdown <= 0) {
+          clearInterval(countdownInterval);
+          countdownTextElement.textContent = 'Redirecting now...';
+          window.location.href = '/welcome/continue';
+        }
+      }, 1000);
+    });
+  </script>
+</body>
+</html>

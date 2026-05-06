@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - LaStream</title>
+  <link rel="icon" href="/images/logo.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.30.0/tabler-icons.min.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <% if (typeof recaptchaSiteKey !== 'undefined' && recaptchaSiteKey) { %>
+  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+  <% } %>
+  <script>
+    tailwind.config = {
+      theme: {
+        fontFamily: { 'sans': ['Inter', 'system-ui', 'sans-serif'] },
+        extend: { colors: { 'primary': '#0077B6' } }
+      }
+    }
+  </script>
+  <style>
+    * { font-family: 'Inter', system-ui, sans-serif; }
+    body {
+      background: linear-gradient(135deg, #0f172a 0%, #1e2d42 40%, #0f2a4a 70%, #0d1b2e 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      position: relative;
+      overflow: hidden;
+    }
+    /* Animated orbs */
+    body::before {
+      content: '';
+      position: fixed;
+      top: -20%;
+      right: -10%;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(0,119,182,0.2) 0%, transparent 70%);
+      border-radius: 50%;
+      animation: float 8s ease-in-out infinite;
+      pointer-events: none;
+    }
+    body::after {
+      content: '';
+      position: fixed;
+      bottom: -20%;
+      left: -10%;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(56,189,248,0.12) 0%, transparent 70%);
+      border-radius: 50%;
+      animation: float 10s ease-in-out infinite reverse;
+      pointer-events: none;
+    }
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33%       { transform: translate(30px, -20px) scale(1.04); }
+      66%       { transform: translate(-20px, 15px) scale(0.97); }
+    }
+    .login-card {
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 1.25rem;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05) inset;
+      width: 100%;
+      max-width: 400px;
+      padding: 2.5rem;
+      position: relative;
+      z-index: 1;
+      animation: cardIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    }
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(24px) scale(0.97); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .input-field {
+      width: 100%;
+      padding: 0.625rem 1rem 0.625rem 2.625rem;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 0.625rem;
+      color: white;
+      font-size: 0.875rem;
+      outline: none;
+      transition: all 0.18s ease;
+    }
+    .input-field::placeholder { color: rgba(148,163,184,0.6); }
+    .input-field:focus {
+      background: rgba(255,255,255,0.09);
+      border-color: rgba(0,119,182,0.7);
+      box-shadow: 0 0 0 3px rgba(0,119,182,0.2);
+    }
+    .input-icon {
+      position: absolute;
+      left: 0.875rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: rgba(148,163,184,0.6);
+      font-size: 1rem;
+    }
+    .btn-login {
+      width: 100%;
+      padding: 0.75rem;
+      background: linear-gradient(135deg, #0077B6, #005F8A);
+      color: white;
+      font-weight: 600;
+      font-size: 0.9375rem;
+      border: none;
+      border-radius: 0.625rem;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      box-shadow: 0 4px 16px rgba(0,119,182,0.4);
+    }
+    .btn-login:hover {
+      background: linear-gradient(135deg, #005F8A, #004d72);
+      transform: translateY(-1px);
+      box-shadow: 0 8px 24px rgba(0,119,182,0.45);
+    }
+    .btn-login:active { transform: translateY(0); }
+    label { color: rgba(203,213,225,0.8); font-size: 0.8125rem; font-weight: 500; }
+    .label-group { display: flex; flex-direction: column; gap: 0.5rem; }
+    .divider { height: 1px; background: rgba(255,255,255,0.07); margin: 1.25rem 0; }
+  </style>
+</head>
+<body>
+  <div class="login-card">
+    <!-- Logo -->
+    <div class="flex flex-col items-center mb-8">
+      <img src="/images/logo.svg" alt="LaStream" class="h-12 mb-3" onerror="this.src='/images/logo_mobile.svg'">
+      <h1 class="text-xl font-bold text-white tracking-tight">LaStream</h1>
+      <p class="text-sm mt-1" style="color:rgba(148,163,184,0.7)">Masuk ke dasbor Anda</p>
+    </div>
+
+    <% if (error) { %>
+    <div class="flex items-center gap-2.5 px-4 py-3 rounded-xl mb-5" style="background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.25)">
+      <i class="ti ti-alert-circle text-red-400 flex-shrink-0"></i>
+      <span class="text-sm text-red-300"><%= error %></span>
+    </div>
+    <% } %>
+
+    <form action="/login" method="post" class="space-y-5">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+      <div class="label-group">
+        <label for="username">Username</label>
+        <div class="relative">
+          <i class="ti ti-user input-icon"></i>
+          <input type="text" id="username" name="username" class="input-field"
+            placeholder="Masukkan username" required autocomplete="username">
+        </div>
+      </div>
+
+      <div class="label-group">
+        <label for="password">Password</label>
+        <div class="relative">
+          <i class="ti ti-lock input-icon"></i>
+          <input type="password" id="password" name="password" class="input-field" style="padding-right:2.75rem"
+            placeholder="Masukkan password" required autocomplete="current-password">
+          <button type="button" onclick="togglePassword()"
+            class="absolute right-3 top-1/2 -translate-y-1/2 transition-colors" style="color:rgba(148,163,184,0.6)">
+            <i class="ti ti-eye text-sm" id="passwordToggle"></i>
+          </button>
+        </div>
+      </div>
+
+      <% if (typeof recaptchaSiteKey !== 'undefined' && recaptchaSiteKey) { %>
+      <div class="flex justify-center pt-1">
+        <div class="g-recaptcha" data-sitekey="<%= recaptchaSiteKey %>" data-theme="dark"></div>
+      </div>
+      <% } %>
+
+      <button type="submit" class="btn-login mt-2">
+        <span>Masuk</span>
+      </button>
+    </form>
+
+    <div class="divider"></div>
+
+    <p class="text-center text-sm" style="color:rgba(148,163,184,0.6)">
+      Belum punya akun?
+      <a href="/signup" class="font-semibold transition-colors" style="color:#38bdf8" onmouseover="this.style.color='#7dd3fc'" onmouseout="this.style.color='#38bdf8'">Daftar</a>
+    </p>
+  </div>
+
+  <script>
+    function togglePassword() {
+      const pw = document.getElementById('password');
+      const icon = document.getElementById('passwordToggle');
+      if (pw.type === 'password') {
+        pw.type = 'text';
+        icon.classList.replace('ti-eye', 'ti-eye-off');
+      } else {
+        pw.type = 'password';
+        icon.classList.replace('ti-eye-off', 'ti-eye');
+      }
+    }
+  </script>
+</body>
+</html>
