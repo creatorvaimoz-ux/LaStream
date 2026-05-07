@@ -8,6 +8,7 @@ const { db } = require('../db/database');
 const Stream = require('../models/Stream');
 const Playlist = require('../models/Playlist');
 const Video = require('../models/Video');
+const TelegramService = require('./telegramService');
 
 let ffmpegPath;
 if (fs.existsSync('/usr/bin/ffmpeg')) {
@@ -890,6 +891,10 @@ async function startStream(streamId, isRetry = false, baseUrl = null) {
           const delay = getRetryDelay(retryCount);
 
           addStreamLog(streamId, `Retry #${retryCount + 1} in ${Math.round(delay / 1000)}s`);
+          
+          // Watchdog notification
+          const errorDetail = `FFmpeg exited with code=${code}, signal=${signal}`;
+          TelegramService.sendWatchdogAlert(currentStream ? currentStream.title : streamId, errorDetail, retryCount + 1, false);
 
           setTimeout(async () => {
             try {
@@ -919,6 +924,8 @@ async function startStream(streamId, isRetry = false, baseUrl = null) {
           return;
         } else {
           addStreamLog(streamId, `Max retries (${MAX_RETRY_ATTEMPTS}) reached`);
+          const errorDetail = `FFmpeg exited with code=${code}, signal=${signal}`;
+          TelegramService.sendWatchdogAlert(currentStream ? currentStream.title : streamId, errorDetail, MAX_RETRY_ATTEMPTS, true);
         }
       }
 

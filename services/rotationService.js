@@ -327,7 +327,8 @@ async function startRotationStream(rotation, item) {
         contentDetails: {
           enableAutoStart: true,
           enableAutoStop: true,
-          latencyPreference: 'normal'
+          latencyPreference: 'normal',
+          enableClosedCaptions: item.youtube_closed_captions === true
         }
       }
     });
@@ -425,6 +426,7 @@ async function startRotationStream(rotation, item) {
       youtube_category: item.category,
       youtube_tags: item.tags,
       youtube_monetization: monetizationEnabled,
+      youtube_closed_captions: item.youtube_closed_captions === true,
       youtube_channel_id: selectedChannel.id,
       is_youtube_api: true,
       schedule_time: rotation.start_time,

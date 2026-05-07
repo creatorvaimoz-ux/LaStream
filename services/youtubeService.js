@@ -166,6 +166,7 @@ async function createYouTubeBroadcast(streamId, baseUrl) {
     contentDetails: {
       enableAutoStart: true,
       enableAutoStop: true,
+      enableClosedCaptions: stream.youtube_closed_captions === true,
       monitorStream: {
         enableMonitorStream: false
       }

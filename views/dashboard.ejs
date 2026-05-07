@@ -136,7 +136,14 @@
                 class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 text-sm focus:border-primary focus:ring-1 focus:ring-primary placeholder-slate-500">
             </div>
           </div>
-          <p class="text-xs text-slate-500">Default: metadata diambil dari nama file & pengaturan akun YouTube anda.</p>
+          <label class="flex items-center gap-2 text-xs text-slate-500 cursor-pointer bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 mt-2">
+            <input type="checkbox" id="pgAutoSubtitles" class="rounded border-slate-300 text-primary">
+            <div>
+              <div class="font-medium text-slate-700">Auto-Generated Subtitles</div>
+              <div class="text-[10px] text-slate-400">Aktifkan Closed Captions (Subtitles) otomatis dari YouTube</div>
+            </div>
+          </label>
+          <p class="text-xs text-slate-500 mt-2">Default: metadata diambil dari nama file & pengaturan akun YouTube anda.</p>
         </div>
       </div>
 
@@ -195,7 +202,19 @@
             </div>
           </div>
 
-          <div class="grid grid-cols-2 gap-2">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <div>
+              <label class="text-xs text-slate-400 block mb-1">Bahasa</label>
+              <select id="pgAILanguage" class="w-full px-2 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 text-xs focus:border-violet-400">
+                <option value="auto">🌐 Auto Detect</option>
+                <option value="id">🇮🇩 Indonesia</option>
+                <option value="en">🇺🇸 English</option>
+                <option value="es">🇪🇸 Spanish</option>
+                <option value="ja">🇯🇵 Japanese</option>
+                <option value="ko">🇰🇷 Korean</option>
+                <option value="hi">🇮🇳 Hindi</option>
+              </select>
+            </div>
             <div>
               <label class="text-xs text-slate-400 block mb-1">Gaya</label>
               <select id="pgAIStyle" class="w-full px-2 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 text-xs focus:border-violet-400">
@@ -361,6 +380,7 @@
                               document.querySelector('input[name="_csrf"]')?.value || '';
             const titleCount = document.getElementById('pgAITitleCount')?.value || '3';
             const refTitle = document.getElementById('pgAIRefTitle')?.value?.trim() || '';
+            const targetLanguage = document.getElementById('pgAILanguage')?.value || 'auto';
             const res = await fetch('/api/ai/generate', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrfToken },
@@ -369,7 +389,8 @@
                 style: document.getElementById('pgAIStyle').value,
                 provider: pgAIProvider,
                 titleCount,
-                refTitle
+                refTitle,
+                targetLanguage
               })
             });
             const data = await res.json();
@@ -1815,6 +1836,19 @@
                         </label>
                       </div>
 
+                      <div class="h-[42px] flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                          <label class="text-sm text-slate-600">Auto-Generated Subtitles</label>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                          <input type="checkbox" id="ytEnableClosedCaptions" class="sr-only peer">
+                          <div class="w-11 h-6 bg-slate-100 rounded-full peer peer-checked:bg-primary"></div>
+                          <div
+                            class="absolute left-[2px] top-[2px] w-5 h-5 bg-white rounded-full transition-all peer-checked:translate-x-5">
+                          </div>
+                        </label>
+                      </div>
+
                       <div id="ytScheduleSettings" class="hidden space-y-4">
                         <div>
                           <label class="text-xs text-slate-500 block mb-1">Start Time</label>
@@ -2306,6 +2340,19 @@
                     </div>
                     <label class="relative inline-flex items-center cursor-pointer">
                       <input type="checkbox" id="editYtEnableMonetization" class="sr-only peer">
+                      <div class="w-11 h-6 bg-slate-100 rounded-full peer peer-checked:bg-primary"></div>
+                      <div
+                        class="absolute left-[2px] top-[2px] w-5 h-5 bg-white rounded-full transition-all peer-checked:translate-x-5">
+                      </div>
+                    </label>
+                  </div>
+
+                  <div class="h-[42px] flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                      <label class="text-sm text-slate-600">Auto-Generated Subtitles</label>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" id="editYtEnableClosedCaptions" class="sr-only peer">
                       <div class="w-11 h-6 bg-slate-100 rounded-full peer peer-checked:bg-primary"></div>
                       <div
                         class="absolute left-[2px] top-[2px] w-5 h-5 bg-white rounded-full transition-all peer-checked:translate-x-5">
@@ -2893,6 +2940,7 @@
         }
 
         ytFormData.ytMonetization = document.getElementById('ytEnableMonetization').checked;
+        ytFormData.ytClosedCaptions = document.getElementById('ytEnableClosedCaptions')?.checked || false;
 
         const createBtn = document.querySelector('#newStreamModal button[type="submit"]');
         const originalBtnText = createBtn.innerHTML;
@@ -4449,6 +4497,8 @@
         renderEditYtTags();
 
         document.getElementById('editYtEnableMonetization').checked = stream.youtube_monetization === true || stream.youtube_monetization === 1;
+        const editYtCC = document.getElementById('editYtEnableClosedCaptions');
+        if (editYtCC) editYtCC.checked = stream.youtube_closed_captions === true || stream.youtube_closed_captions === 1;
 
         if (stream.video_id) {
           document.getElementById('editYtSelectedVideoId').value = stream.video_id;
@@ -4938,6 +4988,7 @@
             };
 
             ytFormDataObj.ytMonetization = document.getElementById('editYtEnableMonetization').checked;
+            ytFormDataObj.ytClosedCaptions = document.getElementById('editYtEnableClosedCaptions')?.checked || false;
 
             const enableSchedule = document.getElementById('editYtEnableSchedule').checked;
             if (enableSchedule) {

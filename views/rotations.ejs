@@ -663,6 +663,53 @@ function addRotationItem() {
             </div>
           </div>
         </div>
+        <div class="md:col-span-2 flex items-center justify-between">
+          <label class="flex items-center gap-2 text-xs text-slate-500 cursor-pointer">
+            <input type="checkbox" name="items[${idx}][youtube_closed_captions]" class="rounded border-slate-300 text-primary">
+            <span>Auto-Generated Subtitles</span>
+          </label>
+        </div>
+        <div class="md:col-span-2 bg-violet-50 rounded-lg border border-violet-100 overflow-hidden mt-1">
+          <div class="px-3 py-2 flex items-center justify-between cursor-pointer hover:bg-violet-100/50 transition-colors" onclick="this.nextElementSibling.classList.toggle('hidden')">
+            <div class="flex items-center gap-2">
+              <i class="ti ti-sparkles text-violet-600 text-sm"></i>
+              <span class="text-xs font-semibold text-violet-700">AI Content Generator</span>
+            </div>
+            <i class="ti ti-chevron-down text-violet-400 text-xs"></i>
+          </div>
+          <div class="hidden p-3 border-t border-violet-100 space-y-3">
+            <div>
+              <label class="text-[10px] text-violet-600 block mb-1">Topik / Konteks</label>
+              <input type="text" class="rotation-ai-prompt w-full px-2 py-1.5 bg-white border border-violet-200 rounded text-xs focus:border-violet-400 focus:ring-1 focus:ring-violet-400" placeholder="Contoh: Mountain River Waterfall...">
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="text-[10px] text-violet-600 block mb-1">Bahasa</label>
+                <select class="rotation-ai-lang w-full px-2 py-1.5 bg-white border border-violet-200 rounded text-xs">
+                  <option value="auto">🌐 Auto Detect</option>
+                  <option value="id">🇮🇩 Indonesia</option>
+                  <option value="en">🇺🇸 English</option>
+                  <option value="es">🇪🇸 Spanish</option>
+                  <option value="ja">🇯🇵 Japanese</option>
+                  <option value="ko">🇰🇷 Korean</option>
+                  <option value="hi">🇮🇳 Hindi</option>
+                </select>
+              </div>
+              <div>
+                <label class="text-[10px] text-violet-600 block mb-1">Gaya</label>
+                <select class="rotation-ai-style w-full px-2 py-1.5 bg-white border border-violet-200 rounded text-xs">
+                  <option value="casual">😄 Santai</option>
+                  <option value="professional">💼 Profesional</option>
+                  <option value="clickbait">🔥 Viral</option>
+                  <option value="educational">📚 Edukatif</option>
+                </select>
+              </div>
+            </div>
+            <button type="button" onclick="generateRotationItemAI(${idx})" class="w-full px-3 py-1.5 bg-violet-600 hover:bg-violet-700 text-white rounded text-xs font-medium flex items-center justify-center gap-1.5 transition-colors">
+              <i class="ti ti-wand"></i> Generate Metadata
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   `;
@@ -999,6 +1046,8 @@ async function saveRotation() {
     const description = item.querySelector(`textarea[name="items[${idx}][description]"]`).value;
     const tags = item.querySelector('.tags-hidden').value;
     const thumbnailInput = item.querySelector('.thumbnail-input');
+    const ccInput = item.querySelector(`input[name="items[${idx}][youtube_closed_captions]"]`);
+    const youtube_closed_captions = ccInput ? ccInput.checked : false;
     
     if (!videoId || !title) {
       showToast('error', `Please fill video and title for item #${i + 1}`);
@@ -1021,6 +1070,7 @@ async function saveRotation() {
       privacy: globalPrivacy,
       category: globalCategory,
       youtube_monetization: globalMonetization,
+      youtube_closed_captions: youtube_closed_captions,
       tags,
       thumbnail_upload_index: i,
       thumbnail_path: thumbnailPath,
@@ -1316,6 +1366,75 @@ async function stopRotation(id) {
     }
   } catch (error) {
     showToast('error', 'An error occurred');
+  }
+}
+</script>
+
+<script>
+async function generateRotationItemAI(idx) {
+  const itemEl = document.querySelector(`.rotation-item[data-index="${idx}"]`);
+  if (!itemEl) return;
+  
+  const prompt = itemEl.querySelector('.rotation-ai-prompt').value;
+  const lang = itemEl.querySelector('.rotation-ai-lang').value;
+  const style = itemEl.querySelector('.rotation-ai-style').value;
+  const btn = itemEl.querySelector('button[onclick^="generateRotationItemAI"]');
+  const originalBtnText = btn.innerHTML;
+  
+  if (!prompt.trim()) {
+    showToast('error', 'Silakan masukkan topik / konteks untuk AI.');
+    return;
+  }
+  
+  btn.innerHTML = '<i class="ti ti-loader animate-spin"></i> Generating...';
+  btn.disabled = true;
+  btn.classList.add('opacity-70', 'cursor-not-allowed');
+  
+  try {
+    const response = await fetch('/api/ai/generate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': csrfToken
+      },
+      body: JSON.stringify({
+        prompt: prompt,
+        targetLanguage: lang,
+        style: style
+      })
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      itemEl.querySelector(`input[name="items[${idx}][title]"]`).value = data.title;
+      itemEl.querySelector(`textarea[name="items[${idx}][description]"]`).value = data.description;
+      
+      const tagsStr = Array.isArray(data.tags) ? data.tags.join(', ') : data.tags;
+      const tagsContainer = itemEl.querySelector('.tags-container');
+      if (tagsContainer && tagsContainer._addTags) {
+        tagsContainer._tags = [];
+        tagsContainer._renderTags();
+        tagsContainer._addTags(tagsStr);
+      } else {
+        itemEl.querySelector('.tags-hidden').value = tagsStr;
+      }
+      
+      showToast('success', 'AI Metadata berhasil digenerate!');
+      
+      const aiPanel = itemEl.querySelector('.rotation-ai-prompt').closest('div.hidden');
+      if (aiPanel) aiPanel.classList.add('hidden');
+      
+    } else {
+      showToast('error', data.error || 'Gagal generate konten AI.');
+    }
+  } catch (error) {
+    console.error('AI Error:', error);
+    showToast('error', 'Terjadi kesalahan saat memanggil AI.');
+  } finally {
+    btn.innerHTML = originalBtnText;
+    btn.disabled = false;
+    btn.classList.remove('opacity-70', 'cursor-not-allowed');
   }
 }
 </script>

@@ -376,6 +376,18 @@ function createTables() {
         }
       });
 
+      db.run(`ALTER TABLE streams ADD COLUMN youtube_closed_captions INTEGER DEFAULT 0`, (err) => {
+        if (err && !err.message.includes('duplicate column name')) {
+          console.error('Error adding youtube_closed_captions column to streams:', err.message);
+        }
+      });
+
+      db.run(`ALTER TABLE rotation_items ADD COLUMN youtube_closed_captions INTEGER DEFAULT 0`, (err) => {
+        if (err && !err.message.includes('duplicate column name')) {
+          console.error('Error adding youtube_closed_captions column to rotation_items:', err.message);
+        }
+      });
+
       db.run(`CREATE TABLE IF NOT EXISTS app_settings (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         setting_key TEXT UNIQUE NOT NULL,

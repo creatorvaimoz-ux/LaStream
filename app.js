@@ -735,6 +735,18 @@ app.get('/dashboard', isAuthenticated, async (req, res) => {
     res.redirect('/login');
   }
 });
+
+// SYSTEM STATS API
+app.get('/api/system-stats', isAuthenticated, async (req, res) => {
+  try {
+    const stats = await systemMonitor.getSystemStats();
+    res.json(stats);
+  } catch (error) {
+    console.error('API /system-stats error:', error);
+    res.status(500).json({ error: 'Failed to retrieve system stats' });
+  }
+});
+
 function normalizeFolderId(folderId) {
   if (folderId === undefined || folderId === null || folderId === '' || folderId === 'root' || folderId === 'null') {
     return null;
@@ -3747,7 +3759,7 @@ app.post('/api/streams/youtube', isAuthenticated, uploadThumbnail.single('thumbn
         error: 'YouTube API credentials not configured in server .env.' 
       });
     }
-    const { videoId, title, description, privacy, category, tags, loopVideo, scheduleStartTime, scheduleEndTime, repeat, ytChannelId, ytMonetization } = req.body;
+    const { videoId, title, description, privacy, category, tags, loopVideo, scheduleStartTime, scheduleEndTime, repeat, ytChannelId, ytMonetization, ytClosedCaptions } = req.body;
     
     let selectedChannel;
     if (ytChannelId) {
@@ -3813,7 +3825,8 @@ app.post('/api/streams/youtube', isAuthenticated, uploadThumbnail.single('thumbn
       youtube_thumbnail: localThumbnailPath,
       youtube_channel_id: selectedChannel.id,
       is_youtube_api: true,
-      youtube_monetization: ytMonetization === 'true' || ytMonetization === true
+      youtube_monetization: ytMonetization === 'true' || ytMonetization === true,
+      youtube_closed_captions: ytClosedCaptions === 'true' || ytClosedCaptions === true
     };
     
     if (scheduleStartTime) {
@@ -3932,6 +3945,9 @@ app.put('/api/streams/:id', isAuthenticated, uploadThumbnail.single('thumbnail')
       }
       if (req.body.ytMonetization !== undefined) {
         updateData.youtube_monetization = req.body.ytMonetization === 'true' || req.body.ytMonetization === true;
+      }
+      if (req.body.ytClosedCaptions !== undefined) {
+        updateData.youtube_closed_captions = req.body.ytClosedCaptions === 'true' || req.body.ytClosedCaptions === true;
       }
       
       if (req.body.scheduleStartTime) {
@@ -4740,7 +4756,8 @@ app.post('/api/rotations', isAuthenticated, uploadThumbnail.any(), async (req, r
         original_thumbnail_path: originalThumbnailPath,
         privacy: item.privacy || 'unlisted',
         category: item.category || '22',
-        youtube_monetization: item.youtube_monetization === true || item.youtube_monetization === 'true'
+        youtube_monetization: item.youtube_monetization === true || item.youtube_monetization === 'true',
+        youtube_closed_captions: item.youtube_closed_captions === true || item.youtube_closed_captions === 'true'
       });
     }
     
@@ -4816,7 +4833,8 @@ app.put('/api/rotations/:id', isAuthenticated, uploadThumbnail.any(), async (req
         original_thumbnail_path: originalThumbnailPath,
         privacy: item.privacy || 'unlisted',
         category: item.category || '22',
-        youtube_monetization: item.youtube_monetization === true || item.youtube_monetization === 'true'
+        youtube_monetization: item.youtube_monetization === true || item.youtube_monetization === 'true',
+        youtube_closed_captions: item.youtube_closed_captions === true || item.youtube_closed_captions === 'true'
       });
     }
     
@@ -4929,7 +4947,7 @@ app.post('/api/settings/ai', isAuthenticated, csrfProtection, async (req, res) =
 
 app.post('/api/ai/generate', isAuthenticated, async (req, res) => {
   try {
-    const { prompt, style, provider, titleCount, refTitle } = req.body;
+    const { prompt, style, provider, titleCount, refTitle, targetLanguage } = req.body;
     if (!prompt || prompt.trim().length < 3) {
       return res.status(400).json({ success: false, error: 'Topik stream terlalu pendek.' });
     }
@@ -4950,7 +4968,14 @@ app.post('/api/ai/generate', isAuthenticated, async (req, res) => {
       educational: 'clear, structured, informative. Academic yet accessible.'
     };
     const styleTone = styleGuide[style] || styleGuide.casual;
-    const outputLang = 'Detect the language of the STREAM TOPIC or COMPETITOR REFERENCE TITLE and use the EXACT SAME language for the output (titles, description, and tags). If it is mixed, use a natural mix.';
+    
+    let outputLang;
+    if (targetLanguage && targetLanguage !== 'auto') {
+      const langNames = { id: 'Indonesian', en: 'English', es: 'Spanish', ja: 'Japanese', ko: 'Korean', hi: 'Hindi' };
+      outputLang = `STRICTLY generate all output (titles, description, and tags) in ${langNames[targetLanguage] || targetLanguage}. Translate the topic if necessary.`;
+    } else {
+      outputLang = 'Detect the language of the STREAM TOPIC or COMPETITOR REFERENCE TITLE and use the EXACT SAME language for the output (titles, description, and tags). If it is mixed, use a natural mix.';
+    }
 
     let ytResearchText = '';
     try {
@@ -5149,7 +5174,16 @@ Respond ONLY with this exact JSON (no markdown, no explanation, no text before/a
     function templateFallback() {
       const topic = prompt.trim();
       const isEnglish = /^[a-zA-Z\s.,!?'\-\:]+$/.test(topic) && /\b(how|to|in|on|the|and|for|live|stream|music|video|with|by)\b/i.test(topic);
-      const lang = isEnglish ? 'en' : 'id';
+      
+      let lang;
+      if (targetLanguage === 'en' || targetLanguage === 'id') {
+        lang = targetLanguage;
+      } else if (targetLanguage && targetLanguage !== 'auto') {
+        lang = 'en'; // fallback to English for unsupported languages in template mode
+      } else {
+        lang = isEnglish ? 'en' : 'id';
+      }
+      
       const contentStyle = style || 'casual';
 
       // Extract meaningful keywords from topic
