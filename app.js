@@ -4929,7 +4929,7 @@ app.post('/api/settings/ai', isAuthenticated, csrfProtection, async (req, res) =
 
 app.post('/api/ai/generate', isAuthenticated, async (req, res) => {
   try {
-    const { prompt, language, style, provider, titleCount, refTitle } = req.body;
+    const { prompt, style, provider, titleCount, refTitle } = req.body;
     if (!prompt || prompt.trim().length < 3) {
       return res.status(400).json({ success: false, error: 'Topik stream terlalu pendek.' });
     }
@@ -4944,26 +4944,26 @@ app.post('/api/ai/generate', isAuthenticated, async (req, res) => {
 
     // Style & language config
     const styleGuide = {
-      casual: {
-        en: 'relaxed, conversational, friendly tone. Use "you/your", contractions, relatable phrasing.',
-        id: 'santai, akrab, ramah. Gunakan kata "kamu/kalian", bahasa sehari-hari yang relatable.'
-      },
-      professional: {
-        en: 'authoritative, polished, informative tone. No slang. Clear value proposition.',
-        id: 'profesional, berwibawa, informatif. Tanpa bahasa gaul. Proposisi nilai yang jelas.'
-      },
-      clickbait: {
-        en: 'high-energy, emotionally charged, urgency-driven. Use power words: SHOCKING, INCREDIBLE, MUST-SEE, UNBELIEVABLE. Strategic use of caps and emojis.',
-        id: 'berenergi tinggi, emosional, penuh urgensi. Pakai kata kuat: MENGEJUTKAN, LUAR BIASA, VIRAL. Gunakan caps dan emoji secara strategis.'
-      },
-      educational: {
-        en: 'clear, structured, informative. Use "How to", "Learn", "Guide", "Everything about". Academic yet accessible.',
-        id: 'jelas, terstruktur, informatif. Gunakan "Cara", "Panduan", "Semua tentang". Akademis namun mudah dipahami.'
-      }
+      casual: 'relaxed, conversational, friendly tone. Use relatable phrasing.',
+      professional: 'authoritative, polished, informative tone. No slang. Clear value proposition.',
+      clickbait: 'high-energy, emotionally charged, urgency-driven. Use power words. Strategic use of caps and emojis.',
+      educational: 'clear, structured, informative. Academic yet accessible.'
     };
-    const lang = language || 'id';
-    const styleTone = (styleGuide[style] || styleGuide.casual)[lang === 'en' ? 'en' : 'id'];
-    const outputLang = lang === 'en' ? 'English' : lang === 'mixed' ? 'Indonesian mixed with English keywords' : 'Bahasa Indonesia';
+    const styleTone = styleGuide[style] || styleGuide.casual;
+    const outputLang = 'Detect the language of the STREAM TOPIC or COMPETITOR REFERENCE TITLE and use the EXACT SAME language for the output (titles, description, and tags). If it is mixed, use a natural mix.';
+
+    let ytResearchText = '';
+    try {
+      const ytSearch = require('yt-search');
+      const searchResult = await ytSearch(prompt);
+      const topVideos = searchResult.videos.slice(0, 5);
+      if (topVideos.length > 0) {
+        const topTitles = topVideos.map((v, i) => `${i + 1}. Title: "${v.title}" | Views: ${v.views} | Age: ${v.ago} | Channel: ${v.author.name}`).join('\\n');
+        ytResearchText = `\\n=== LIVE YOUTUBE RESEARCH DATA (TOP RANKING VIDEOS) ===\\nHere are the top 5 currently ranking videos on YouTube for this exact topic:\\n${topTitles}\\n\\nIMPORTANT RESEARCH INSTRUCTION:\\n- ACT AS A DATA ANALYST: Analyze these videos. Which titles have the most views? What keywords are they using? Is the audience preferring older or newer videos?\\n- Based on this data, deduce the winning SEO pattern for this specific topic.\\n- Your generated titles MUST be competitive against these.\\n- Provide a 'researchAnalysis' in your JSON explaining WHY you chose your recommended titles based on this competitor data.\\n========================================================\\n`;
+      }
+    } catch (err) {
+      console.warn('YouTube search failed for AI generation:', err.message);
+    }
 
     const systemPrompt = `You are an elite YouTube SEO specialist with 10+ years of experience, combining expertise from VidIQ, TubeBuddy, and top YouTube content strategists. Your task is to create highly optimized YouTube live stream metadata that maximizes discoverability, CTR (Click-Through Rate), and watch time.
 
@@ -4971,6 +4971,7 @@ STREAM TOPIC: "${prompt}"
 OUTPUT LANGUAGE: ${outputLang}
 WRITING STYLE: ${styleTone}
 NUMBER OF TITLE VARIANTS: ${numTitles}
+${ytResearchText}
 ${hasRefTitle ? `
 === COMPETITOR TITLE ANALYSIS (HIGHEST PRIORITY) ===
 COMPETITOR REFERENCE TITLE: "${refTitle.trim()}"
@@ -4998,12 +4999,13 @@ IMPORTANT: The competitor's title structure is PROVEN to work. Replicate its DNA
 
 MANDATORY RULES (apply to ALL titles):
 1. KEYWORD FIRST: The PRIMARY keyword from the topic MUST appear in the first 1-3 words
-2. LENGTH: 55-65 characters ONLY (count carefully — YouTube truncates at ~67 chars in search)
-3. NO REPETITION: Every title variant must use a completely different SEO structure/formula
-4. SPECIFICITY: Never generic. Replace "great music" with the actual genre/artist/mood
-5. SEPARATOR USAGE: Use " | " or " - " or ":" to add secondary keyword naturally
+2. LENGTH STRATEGY: Match the length pattern of the top-ranking videos. If competitors use long titles (80-100+ chars) for ambient/sleep/24/7 videos, you MUST also use long titles. Otherwise, use standard 55-65 chars.
+3. TONE MATCHING: If the topic is relaxing/sleep/ambient/nature, STRICTLY FORBID clickbait words like "SHOCKING", "VIRAL", "INCREDIBLE". Keep it calm, descriptive, and keyword-rich.
+4. NO REPETITION: Every title variant must use a completely different SEO structure/formula
+5. SPECIFICITY: Never generic. Replace "great music" with the actual genre/artist/mood
+6. SEPARATOR USAGE: Use " | " or " - " or ":" to add secondary keyword naturally. For ambient/sleep videos, you may use commas or periods to chain keywords like competitors.
 
-PROVEN TITLE FORMULA BANK (use DIFFERENT ones for each variant):
+PROVEN TITLE FORMULA BANK (use DIFFERENT ones for each variant, OR use patterns found in research):
 • Formula A — [Primary Keyword] Live ${new Date().getFullYear()} | [Benefit/Hook]
 • Formula B — [Artist/Topic]: [Emotional Hook] | Full Live Stream
 • Formula C — 🎵 [Primary Keyword] - [Secondary Keyword] | [Platform] Live
@@ -5036,7 +5038,8 @@ FORBIDDEN WORDS (never use these — they kill CTR):
 
 TITLE QUALITY SELF-CHECK (verify EACH title before outputting):
 ✓ Does keyword appear in first 3 words? 
-✓ Is it 55-65 characters?
+✓ Is the length appropriate based on competitor strategy (e.g., long for ambient, 55-65 for standard)?
+✓ Does the tone match the intent? (e.g., No "SHOCKING" for relaxing videos!)
 ✓ Does it tell the viewer EXACTLY what they'll get?
 ✓ Would a person click this over a competitor's title?
 ✓ Is it different from all other variants?
@@ -5080,9 +5083,9 @@ Respond ONLY with this exact JSON (no markdown, no explanation, no text before/a
   "seoScore": 87,
   "seoTips": [
     "Specific actionable tip 1 based on this exact topic",
-    "Specific actionable tip 2 based on this exact topic", 
     "Specific actionable tip 3 based on this exact topic"
-  ]
+  ],
+  "researchAnalysis": "Detailed explanation of your research findings and why you recommend the generated titles."
 }`;
 
 
@@ -5145,7 +5148,8 @@ Respond ONLY with this exact JSON (no markdown, no explanation, no text before/a
     // Helper: smart language-aware template fallback (no API needed)
     function templateFallback() {
       const topic = prompt.trim();
-      const lang = language || 'id';
+      const isEnglish = /^[a-zA-Z\s.,!?'\-\:]+$/.test(topic) && /\b(how|to|in|on|the|and|for|live|stream|music|video|with|by)\b/i.test(topic);
+      const lang = isEnglish ? 'en' : 'id';
       const contentStyle = style || 'casual';
 
       // Extract meaningful keywords from topic
@@ -5244,13 +5248,16 @@ Respond ONLY with this exact JSON (no markdown, no explanation, no text before/a
         id: ['Tambahkan kata kunci lebih spesifik di judul agar lebih mudah ditemukan', 'Perluas deskripsi hingga lebih dari 300 kata untuk SEO lebih baik', 'Sertakan 3-5 hashtag relevan di deskripsi Anda']
       };
 
-      const useLang = lang === 'mixed' ? 'id' : lang; // mixed: default to ID as base
+      const useLang = lang;
       const titles = (titleTemplates[useLang] || titleTemplates.id)[contentStyle] || titleTemplates.id.casual;
       const description = (descriptions[useLang] || descriptions.id)[contentStyle] || descriptions.id.casual;
       const tags = ((tagSets[useLang] || tagSets.id)[contentStyle] || tagSets.id.casual).map(t => t.toLowerCase().trim()).filter(Boolean);
       const seoTips = seoTipsMap[useLang] || seoTipsMap.id;
 
-      return { titles, description, tags, seoScore: 65, seoTips };
+      const researchAnalysis = useLang === 'en' 
+        ? "Because the AI API is currently offline, this is a fallback template generated based on general SEO best practices without live YouTube data."
+        : "Karena API AI sedang offline, hasil ini merupakan template otomatis yang dibuat berdasarkan praktik terbaik SEO umum tanpa data YouTube live.";
+      return { titles, description, tags, seoScore: 65, seoTips, researchAnalysis };
     }
 
 
