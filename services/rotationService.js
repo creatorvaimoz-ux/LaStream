@@ -1,6 +1,7 @@
 const Rotation = require('../models/Rotation');
 const Stream = require('../models/Stream');
 const User = require('../models/User');
+const RotationLog = require('../models/RotationLog');
 const streamingService = require('./streamingService');
 const { google } = require('googleapis');
 const { decrypt } = require('../utils/encryption');
@@ -435,6 +436,20 @@ async function startRotationStream(rotation, item) {
 
     const startResult = await streamingService.startStream(stream.id);
     if (!startResult.success) {
+      // Log failure
+      try {
+        await RotationLog.create({
+          rotation_id: rotation.id,
+          rotation_item_id: item.id,
+          rotation_name: rotation.name,
+          item_title: item.title,
+          action: 'start',
+          status: 'error',
+          error_message: startResult.error,
+          stream_id: stream.id,
+          started_at: new Date().toISOString()
+        });
+      } catch (logErr) { console.error('[RotationService] Log error:', logErr.message); }
       return {
         success: false,
         error: startResult.error,
@@ -442,9 +457,37 @@ async function startRotationStream(rotation, item) {
       };
     }
 
+    // Log success
+    try {
+      await RotationLog.create({
+        rotation_id: rotation.id,
+        rotation_item_id: item.id,
+        rotation_name: rotation.name,
+        item_title: item.title,
+        action: 'start',
+        status: 'success',
+        stream_id: stream.id,
+        started_at: new Date().toISOString()
+      });
+      // Keep only last 200 logs per rotation
+      await RotationLog.deleteOld(rotation.id, 200);
+    } catch (logErr) { console.error('[RotationService] Log error:', logErr.message); }
+
     return { success: true, streamId: stream.id, broadcastId: broadcast.id };
   } catch (error) {
     console.error('[RotationService] Error starting rotation stream:', error);
+    try {
+      await RotationLog.create({
+        rotation_id: rotation.id,
+        rotation_item_id: item.id,
+        rotation_name: rotation.name,
+        item_title: item.title,
+        action: 'start',
+        status: 'error',
+        error_message: error.message,
+        started_at: new Date().toISOString()
+      });
+    } catch (logErr) { /* ignore */ }
     return { success: false, error: error.message, code: error.code || null };
   }
 }
@@ -512,6 +555,19 @@ async function stopRotationStream(rotation, item) {
         }
       }
     }
+
+    // Log stop event
+    try {
+      await RotationLog.create({
+        rotation_id: rotation.id,
+        rotation_item_id: item.id,
+        rotation_name: rotation.name,
+        item_title: item.title,
+        action: 'stop',
+        status: 'success',
+        stopped_at: new Date().toISOString()
+      });
+    } catch (logErr) { console.error('[RotationService] Log error:', logErr.message); }
 
     return { success: true };
   } catch (error) {

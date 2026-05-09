@@ -737,6 +737,59 @@
         </div>
       </div>
 
+      <!-- 3.5. Dynamic Overlays & Watermarks -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden transition-opacity duration-300 relative">
+        <div class="px-4 sm:px-5 py-3 border-b border-slate-100 flex items-center gap-2 cursor-pointer"
+          onclick="document.getElementById('pgOverlaySection').classList.toggle('hidden')">
+          <i class="ti ti-layers-intersect text-pink-500"></i>
+          <h3 class="font-semibold text-slate-800 text-sm">Dynamic Overlays & Watermark (Opsional)</h3>
+          <i class="ti ti-chevron-down text-slate-400 ml-auto"></i>
+        </div>
+        <div id="pgOverlaySection" class="p-5 space-y-4 hidden">
+          <p class="text-[11px] text-amber-700 bg-amber-50 p-2.5 rounded-lg border border-amber-200 font-medium">
+            <i class="ti ti-alert-triangle text-amber-500 mr-1 text-sm align-text-bottom"></i> 
+            Mengaktifkan fitur ini akan memaksa stream menggunakan <b>Advanced Settings</b> (re-encoding H.264) yang membutuhkan CPU ekstra.
+          </p>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="text-xs font-medium text-slate-700 block mb-1">Logo Watermark (PNG Transparan)</label>
+              <div class="flex items-center gap-2">
+                <input type="file" id="pgWatermarkFile" accept="image/png" class="text-xs w-full p-1.5 border border-slate-300 rounded-lg bg-slate-50">
+                <button type="button" id="pgBtnUploadWatermark" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-colors">Upload</button>
+              </div>
+              <input type="hidden" id="pgWatermarkPath">
+              <p id="pgWatermarkStatus" class="text-[10px] text-green-600 mt-1 hidden"><i class="ti ti-check"></i> Watermark siap digunakan</p>
+            </div>
+            <div>
+              <label class="text-xs font-medium text-slate-700 block mb-1">Posisi Watermark</label>
+              <select id="pgWatermarkPosition" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 text-sm focus:border-primary focus:ring-1 focus:ring-primary">
+                <option value="top-right">Pojok Kanan Atas</option>
+                <option value="top-left">Pojok Kiri Atas</option>
+                <option value="bottom-right">Pojok Kanan Bawah</option>
+                <option value="bottom-left">Pojok Kiri Bawah</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="border-t border-slate-100"></div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="text-xs font-medium text-slate-700 block mb-1">Teks Overlay</label>
+              <input type="text" id="pgOverlayText" placeholder="Contoh: Jangan lupa Subscribe!" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 text-sm focus:border-primary focus:ring-1 focus:ring-primary">
+            </div>
+            <div>
+              <label class="text-xs font-medium text-slate-700 block mb-1">Tipe Teks</label>
+              <select id="pgOverlayTextType" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 text-sm focus:border-primary focus:ring-1 focus:ring-primary">
+                <option value="static">Statis (Menempel pada area watermark)</option>
+                <option value="marquee">Running Text (Bergerak di bawah layar)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- 4. Atur Penjadwal & Publish -->
       <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         <div class="px-4 sm:px-5 py-3 border-b border-slate-100 flex items-center gap-2">
@@ -2905,6 +2958,44 @@
 
     document.addEventListener('DOMContentLoaded', function () {
       updateToggleDisplay('both');
+
+      const pgBtnUploadWatermark = document.getElementById('pgBtnUploadWatermark');
+      if (pgBtnUploadWatermark) {
+        pgBtnUploadWatermark.addEventListener('click', async function() {
+          const fileInput = document.getElementById('pgWatermarkFile');
+          if (!fileInput.files || fileInput.files.length === 0) {
+            showToast('error', 'Pilih file watermark (PNG) terlebih dahulu');
+            return;
+          }
+          
+          const fd = new FormData();
+          fd.append('watermark', fileInput.files[0]);
+          
+          const originalText = pgBtnUploadWatermark.innerHTML;
+          pgBtnUploadWatermark.innerHTML = '<i class="ti ti-loader animate-spin"></i>';
+          pgBtnUploadWatermark.disabled = true;
+          
+          try {
+            const res = await fetch('/api/streams/upload-watermark', {
+              method: 'POST',
+              body: fd
+            });
+            const data = await res.json();
+            if (data.success) {
+              document.getElementById('pgWatermarkPath').value = data.path;
+              document.getElementById('pgWatermarkStatus').classList.remove('hidden');
+              showToast('success', 'Watermark berhasil diunggah');
+            } else {
+              showToast('error', data.error || 'Gagal mengunggah watermark');
+            }
+          } catch(e) {
+            showToast('error', 'Terjadi kesalahan saat mengunggah');
+          } finally {
+            pgBtnUploadWatermark.innerHTML = originalText;
+            pgBtnUploadWatermark.disabled = false;
+          }
+        });
+      }
     });
 
     updateSystemStats();
@@ -2941,6 +3032,11 @@
 
         ytFormData.ytMonetization = document.getElementById('ytEnableMonetization').checked;
         ytFormData.ytClosedCaptions = document.getElementById('ytEnableClosedCaptions')?.checked || false;
+        
+        ytFormData.watermarkPath = document.getElementById('pgWatermarkPath')?.value || null;
+        ytFormData.watermarkPosition = document.getElementById('pgWatermarkPosition')?.value || 'top-right';
+        ytFormData.overlayText = document.getElementById('pgOverlayText')?.value || null;
+        ytFormData.overlayTextType = document.getElementById('pgOverlayTextType')?.value || 'static';
 
         const createBtn = document.querySelector('#newStreamModal button[type="submit"]');
         const originalBtnText = createBtn.innerHTML;
@@ -3042,7 +3138,11 @@
         loopVideo: document.querySelector('input[name="loopVideo"]').checked,
         orientation: currentOrientation,
         resolution: document.getElementById('currentResolution').textContent.split(' ')[0],
-        useAdvancedSettings: !document.getElementById('advancedSettingsContent').classList.contains('hidden')
+        useAdvancedSettings: !document.getElementById('advancedSettingsContent').classList.contains('hidden'),
+        watermarkPath: document.getElementById('pgWatermarkPath')?.value || null,
+        watermarkPosition: document.getElementById('pgWatermarkPosition')?.value || 'top-right',
+        overlayText: document.getElementById('pgOverlayText')?.value || null,
+        overlayTextType: document.getElementById('pgOverlayTextType')?.value || 'static'
       };
       const scheduleStartTime = document.getElementById('scheduleStartTime').value;
       const scheduleEndTime = document.getElementById('scheduleEndTime').value;

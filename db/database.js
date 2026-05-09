@@ -398,6 +398,50 @@ function createTables() {
         if (err && !err.message.includes('already exists')) {
           console.error('Error creating app_settings table:', err.message);
         }
+      });
+
+      // Add notes column to streams
+      db.run(`ALTER TABLE streams ADD COLUMN notes TEXT`, (err) => {
+        if (err && !err.message.includes('duplicate column name')) {
+          console.error('Error adding notes column to streams:', err.message);
+        }
+      });
+
+      // Create rotation_logs table for tracking run history
+      db.run(`CREATE TABLE IF NOT EXISTS rotation_logs (
+        id TEXT PRIMARY KEY,
+        rotation_id TEXT NOT NULL,
+        rotation_item_id TEXT,
+        rotation_name TEXT,
+        item_title TEXT,
+        action TEXT NOT NULL,
+        status TEXT DEFAULT 'success',
+        error_message TEXT,
+        stream_id TEXT,
+        started_at DATETIME,
+        stopped_at DATETIME,
+        duration_seconds INTEGER,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (rotation_id) REFERENCES stream_rotations(id) ON DELETE CASCADE
+      )`, (err) => {
+        if (err && !err.message.includes('already exists')) {
+          console.error('Error creating rotation_logs table:', err.message);
+        }
+        
+        // Add Dynamic Overlays & Watermarks columns
+        db.run(`ALTER TABLE streams ADD COLUMN watermark_path TEXT`, (err) => {
+          if (err && !err.message.includes('duplicate column name')) console.error(err.message);
+        });
+        db.run(`ALTER TABLE streams ADD COLUMN watermark_position TEXT DEFAULT 'top-right'`, (err) => {
+          if (err && !err.message.includes('duplicate column name')) console.error(err.message);
+        });
+        db.run(`ALTER TABLE streams ADD COLUMN overlay_text TEXT`, (err) => {
+          if (err && !err.message.includes('duplicate column name')) console.error(err.message);
+        });
+        db.run(`ALTER TABLE streams ADD COLUMN overlay_text_type TEXT DEFAULT 'static'`, (err) => {
+          if (err && !err.message.includes('duplicate column name')) console.error(err.message);
+        });
+        
         resolve();
       });
     });

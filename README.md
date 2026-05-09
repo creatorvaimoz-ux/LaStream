@@ -14,16 +14,18 @@
 ## ✨ Fitur Utama
 
 - 🔴 **Live Streaming YouTube** — via YouTube API v3 (otomatis buat broadcast & stream)
+- 🖼️ **Dynamic Overlays** — tambahkan logo watermark & running text otomatis (FFmpeg)
 - 📅 **Penjadwal Otomatis** — atur jadwal mulai & selesai dengan repeat mode
 - 🎬 **Manajemen Media** — upload video, audio, thumbnail dengan folder manager
 - 📋 **Playlist Manager** — buat playlist untuk rotasi konten
-- 🤖 **Content AI** — generate judul, deskripsi & tags otomatis dengan AI
+- 🤖 **Content AI & Subtitle** — generate SEO metadata & subtitle otomatis (Closed Captions)
 - 💰 **Monetisasi** — kelola iklan, Super Chat, Membership per stream
 - 📺 **VOD After Live** — atur visibilitas & delay publish rekaman setelah live
 - 📊 **Analytics** — tayangan, jam tonton, geografi, sumber traffic & pendapatan
 - 🤖 **YouTube Chatbot** — pesan otomatis di live chat
 - 📱 **Telegram Notifikasi** — notifikasi start/stop/error via bot Telegram
 - 🔒 **Multi User** — sistem role admin & user dengan manajemen akun
+- 🗃️ **Database Bawaan (SQLite)** — ringan, cepat, tanpa perlu setup database terpisah
 - 📱 **Responsive** — tampilan mobile-friendly
 
 ---

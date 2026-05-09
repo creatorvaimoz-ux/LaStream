@@ -31,7 +31,11 @@ class Stream {
       youtube_channel_id = null,
       is_youtube_api = false,
       youtube_monetization = false,
-      youtube_closed_captions = false
+      youtube_closed_captions = false,
+      watermark_path = null,
+      watermark_position = 'top-right',
+      overlay_text = null,
+      overlay_text_type = 'static'
     } = streamData;
     const loop_video_int = loop_video ? 1 : 0;
     const use_advanced_settings_int = use_advanced_settings ? 1 : 0;
@@ -46,13 +50,13 @@ class Stream {
           id, title, video_id, rtmp_url, stream_key, platform, platform_icon,
           bitrate, resolution, fps, orientation, loop_video,
           schedule_time, end_time, duration, status, status_updated_at, use_advanced_settings, user_id,
-          youtube_broadcast_id, youtube_stream_id, youtube_description, youtube_privacy, youtube_category, youtube_tags, youtube_thumbnail, youtube_channel_id, is_youtube_api, youtube_monetization, youtube_closed_captions
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          youtube_broadcast_id, youtube_stream_id, youtube_description, youtube_privacy, youtube_category, youtube_tags, youtube_thumbnail, youtube_channel_id, is_youtube_api, youtube_monetization, youtube_closed_captions, watermark_path, watermark_position, overlay_text, overlay_text_type
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           id, title, video_id, rtmp_url, stream_key, platform, platform_icon,
           bitrate, resolution, fps, orientation, loop_video_int,
           schedule_time, end_time, duration, final_status, status_updated_at, use_advanced_settings_int, user_id,
-          youtube_broadcast_id, youtube_stream_id, youtube_description, youtube_privacy, youtube_category, youtube_tags, youtube_thumbnail, youtube_channel_id, is_youtube_api_int, youtube_monetization_int, youtube_closed_captions_int
+          youtube_broadcast_id, youtube_stream_id, youtube_description, youtube_privacy, youtube_category, youtube_tags, youtube_thumbnail, youtube_channel_id, is_youtube_api_int, youtube_monetization_int, youtube_closed_captions_int, watermark_path, watermark_position, overlay_text, overlay_text_type
         ],
         function (err) {
           if (err) {
@@ -494,6 +498,112 @@ class Stream {
         }
         resolve(row.count > 0);
       });
+    });
+  }
+
+  static duplicate(id, userId) {
+    return new Promise((resolve, reject) => {
+      db.get('SELECT * FROM streams WHERE id = ? AND user_id = ?', [id, userId], (err, row) => {
+        if (err) return reject(err);
+        if (!row) return reject(new Error('Stream not found'));
+        const { v4: uuidv4 } = require('uuid');
+        const newId = uuidv4();
+        const now = new Date().toISOString();
+        db.run(
+          `INSERT INTO streams (id, title, video_id, rtmp_url, stream_key, platform, platform_icon, bitrate, resolution, fps,
+            orientation, loop_video, schedule_time, end_time, duration, status, status_updated_at, use_advanced_settings,
+            user_id, youtube_description, youtube_privacy, youtube_category, youtube_tags, youtube_channel_id,
+            is_youtube_api, youtube_monetization, youtube_closed_captions, notes, created_at, updated_at)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,NULL,NULL,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+          [
+            newId,
+            `${row.title} (Copy)`,
+            row.video_id, row.rtmp_url, row.stream_key, row.platform, row.platform_icon,
+            row.bitrate, row.resolution, row.fps, row.orientation, row.loop_video,
+            row.duration, 'offline', now, row.use_advanced_settings, row.user_id,
+            row.youtube_description, row.youtube_privacy, row.youtube_category, row.youtube_tags,
+            row.youtube_channel_id, row.is_youtube_api, row.youtube_monetization,
+            row.youtube_closed_captions, row.notes, now, now
+          ],
+          function(err) {
+            if (err) {
+              console.error('Error duplicating stream:', err.message);
+              return reject(err);
+            }
+            resolve({ id: newId, title: `${row.title} (Copy)` });
+          }
+        );
+      });
+    });
+  }
+
+  static bulkDelete(ids, userId) {
+    return new Promise((resolve, reject) => {
+      if (!ids || ids.length === 0) return resolve({ deleted: 0 });
+      const placeholders = ids.map(() => '?').join(',');
+      db.run(
+        `DELETE FROM streams WHERE id IN (${placeholders}) AND user_id = ?`,
+        [...ids, userId],
+        function(err) {
+          if (err) {
+            console.error('Error bulk deleting streams:', err.message);
+            return reject(err);
+          }
+          resolve({ deleted: this.changes });
+        }
+      );
+    });
+  }
+
+  static findScheduledUpcoming(userId, hours = 24) {
+    return new Promise((resolve, reject) => {
+      const now = new Date().toISOString();
+      const future = new Date(Date.now() + hours * 3600 * 1000).toISOString();
+      db.all(
+        `SELECT s.*, v.title AS video_title, p.name AS playlist_name,
+                yc.channel_name AS youtube_channel_name
+         FROM streams s
+         LEFT JOIN videos v ON s.video_id = v.id
+         LEFT JOIN playlists p ON s.video_id = p.id
+         LEFT JOIN youtube_channels yc ON s.youtube_channel_id = yc.id
+         WHERE s.user_id = ?
+           AND s.status = 'scheduled'
+           AND s.schedule_time IS NOT NULL
+           AND s.schedule_time >= ?
+           AND s.schedule_time <= ?
+         ORDER BY s.schedule_time ASC
+         LIMIT 20`,
+        [userId, now, future],
+        (err, rows) => {
+          if (err) {
+            console.error('Error finding upcoming streams:', err.message);
+            return reject(err);
+          }
+          resolve(rows || []);
+        }
+      );
+    });
+  }
+
+  static getStreamHistory(userId, days = 30) {
+    return new Promise((resolve, reject) => {
+      const since = new Date(Date.now() - days * 86400 * 1000).toISOString().slice(0, 10);
+      db.all(
+        `SELECT DATE(start_time) as date, COUNT(*) as count, platform
+         FROM stream_history
+         WHERE user_id = ?
+           AND start_time >= ?
+         GROUP BY DATE(start_time), platform
+         ORDER BY date ASC`,
+        [userId, since],
+        (err, rows) => {
+          if (err) {
+            console.error('Error getting stream history stats:', err.message);
+            return reject(err);
+          }
+          resolve(rows || []);
+        }
+      );
     });
   }
 }

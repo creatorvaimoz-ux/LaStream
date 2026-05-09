@@ -5410,6 +5410,242 @@ Respond ONLY with this exact JSON (no markdown, no explanation, no text before/a
 
 
 
+// ============================================================
+// FEATURE: DYNAMIC OVERLAYS / WATERMARK UPLOAD
+// ============================================================
+app.post('/api/streams/upload-watermark', isAuthenticated, uploadThumbnail.single('watermark'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, error: 'No watermark file uploaded' });
+    }
+    const watermarkPath = `/uploads/thumbnails/${req.file.filename}`;
+    res.json({ success: true, watermarkPath });
+  } catch (error) {
+    console.error('Watermark upload error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ============================================================
+// FEATURE: SCHEDULE PAGE
+// ============================================================
+app.get('/schedule', isAuthenticated, async (req, res) => {
+  try {
+    const user = await User.findById(req.session.userId);
+    if (!user) { req.session.destroy(); return res.redirect('/login'); }
+
+    const allStreams = await Stream.findAll(req.session.userId, 'scheduled');
+    const Rotation = require('./models/Rotation');
+    const rotations = await Rotation.findAll(req.session.userId);
+    const activeRotations = rotations.filter(r => r.status === 'active' || r.status === 'paused');
+
+    res.render('schedule', {
+      title: 'Jadwal Stream',
+      active: 'schedule',
+      user,
+      scheduledStreams: allStreams,
+      rotations: activeRotations
+    });
+  } catch (error) {
+    console.error('Schedule page error:', error);
+    res.redirect('/dashboard');
+  }
+});
+
+// ============================================================
+// FEATURE: UPCOMING STREAMS API
+// ============================================================
+app.get('/api/schedule/upcoming', isAuthenticated, async (req, res) => {
+  try {
+    const hours = parseInt(req.query.hours) || 24;
+    const streams = await Stream.findScheduledUpcoming(req.session.userId, hours);
+    res.json({ success: true, streams });
+  } catch (error) {
+    console.error('Upcoming streams API error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ============================================================
+// FEATURE: STREAM DUPLICATE
+// ============================================================
+app.post('/api/streams/:id/duplicate', isAuthenticated, async (req, res) => {
+  try {
+    const result = await Stream.duplicate(req.params.id, req.session.userId);
+    res.json({ success: true, stream: result });
+  } catch (error) {
+    console.error('Stream duplicate error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ============================================================
+// FEATURE: STREAM RESTART
+// ============================================================
+app.post('/api/streams/:id/restart', isAuthenticated, async (req, res) => {
+  try {
+    const stream = await Stream.findById(req.params.id);
+    if (!stream || stream.user_id !== req.session.userId) {
+      return res.status(404).json({ success: false, error: 'Stream not found' });
+    }
+
+    // Stop if currently live
+    if (stream.status === 'live') {
+      await streamingService.stopStream(stream.id);
+      await new Promise(r => setTimeout(r, 2000));
+    }
+
+    // Start stream
+    const baseUrl = process.env.BASE_URL || `http://localhost:${process.env.PORT || 7575}`;
+    const result = await streamingService.startStream(stream.id, false, baseUrl);
+    if (!result.success) {
+      return res.status(500).json({ success: false, error: result.error });
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Stream restart error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ============================================================
+// FEATURE: BULK STREAM ACTIONS
+// ============================================================
+app.post('/api/streams/bulk-action', isAuthenticated, async (req, res) => {
+  try {
+    const { action, ids } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ success: false, error: 'No streams selected' });
+    }
+
+    if (action === 'delete') {
+      const result = await Stream.bulkDelete(ids, req.session.userId);
+      return res.json({ success: true, deleted: result.deleted });
+    }
+
+    if (action === 'stop') {
+      let stopped = 0;
+      for (const id of ids) {
+        const stream = await Stream.findById(id);
+        if (stream && stream.user_id === req.session.userId && stream.status === 'live') {
+          try {
+            await streamingService.stopStream(id);
+            stopped++;
+          } catch (e) {
+            console.error(`Bulk stop error for ${id}:`, e.message);
+          }
+        }
+      }
+      return res.json({ success: true, stopped });
+    }
+
+    res.status(400).json({ success: false, error: 'Unknown action' });
+  } catch (error) {
+    console.error('Bulk action error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ============================================================
+// FEATURE: ROTATION LOGS API
+// ============================================================
+app.get('/api/rotations/:id/logs', isAuthenticated, async (req, res) => {
+  try {
+    const Rotation = require('./models/Rotation');
+    const RotationLog = require('./models/RotationLog');
+    const rotation = await Rotation.findById(req.params.id);
+    if (!rotation || rotation.user_id !== req.session.userId) {
+      return res.status(404).json({ success: false, error: 'Rotation not found' });
+    }
+    const logs = await RotationLog.findByRotationId(req.params.id, 100);
+    const stats = await RotationLog.getStats(req.params.id);
+    res.json({ success: true, logs, stats });
+  } catch (error) {
+    console.error('Rotation logs API error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ============================================================
+// FEATURE: ANALYTICS STREAM STATS
+// ============================================================
+app.get('/api/analytics/stream-stats', isAuthenticated, async (req, res) => {
+  try {
+    const allStreams = await Stream.findAll(req.session.userId);
+    const liveStreams = allStreams.filter(s => s.status === 'live');
+    const scheduledStreams = allStreams.filter(s => s.status === 'scheduled');
+    const todayStart = new Date(); todayStart.setHours(0,0,0,0);
+    const todayStr = todayStart.toISOString();
+
+    // Count today's streams from history
+    const { db } = require('./db/database');
+    const todayCount = await new Promise((resolve) => {
+      db.get(
+        `SELECT COUNT(*) as count FROM stream_history WHERE user_id = ? AND start_time >= ?`,
+        [req.session.userId, todayStr],
+        (err, row) => resolve(row ? row.count : 0)
+      );
+    });
+
+    const historyData = await Stream.getStreamHistory(req.session.userId, 30);
+
+    res.json({
+      success: true,
+      live: liveStreams.length,
+      scheduled: scheduledStreams.length,
+      total: allStreams.length,
+      todayStreams: todayCount,
+      historyData
+    });
+  } catch (error) {
+    console.error('Stream stats API error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ============================================================
+// FEATURE: EXPORT STREAM HISTORY CSV
+// ============================================================
+app.get('/api/analytics/export-csv', isAuthenticated, async (req, res) => {
+  try {
+    const { db } = require('./db/database');
+    const rows = await new Promise((resolve, reject) => {
+      db.all(
+        `SELECT title, platform, start_time, end_time, duration, resolution, bitrate, fps
+         FROM stream_history
+         WHERE user_id = ?
+         ORDER BY start_time DESC
+         LIMIT 1000`,
+        [req.session.userId],
+        (err, rows) => { if (err) reject(err); else resolve(rows || []); }
+      );
+    });
+
+    const headers = ['Judul', 'Platform', 'Waktu Mulai', 'Waktu Selesai', 'Durasi (detik)', 'Resolusi', 'Bitrate', 'FPS'];
+    const csvRows = rows.map(r => [
+      `"${(r.title || '').replace(/"/g, '""')}"`,
+      r.platform || '',
+      r.start_time || '',
+      r.end_time || '',
+      r.duration || '',
+      r.resolution || '',
+      r.bitrate || '',
+      r.fps || ''
+    ].join(','));
+
+    const csv = [headers.join(','), ...csvRows].join('\n');
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="stream-history-${new Date().toISOString().slice(0,10)}.csv"`);
+    res.send('\uFEFF' + csv); // BOM for Excel compatibility
+  } catch (error) {
+    console.error('Export CSV error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ============================================================
+
 const server = app.listen(port, '0.0.0.0', async () => {
   try {
     await initializeDatabase();

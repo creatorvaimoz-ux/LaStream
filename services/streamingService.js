@@ -435,117 +435,34 @@ async function buildFFmpegArgsForPlaylist(stream, playlist) {
   fs.writeFileSync(concatFile, content);
 
   const hasAudio = playlist.audios && playlist.audios.length > 0;
-
-  if (!hasAudio) {
-    if (!stream.use_advanced_settings) {
-      return [
-        '-nostdin',
-        '-loglevel', 'warning',
-        '-stats',
-        '-re',
-        '-fflags', '+genpts+igndts+discardcorrupt',
-        '-avoid_negative_ts', 'make_zero',
-        '-f', 'concat',
-        '-safe', '0',
-        '-i', concatFile,
-        '-c:v', 'copy',
-        '-c:a', 'copy',
-        '-bsf:a', 'aac_adtstoasc',
-        '-f', 'flv',
-        '-flvflags', 'no_duration_filesize',
-        rtmpUrl
-      ];
-    }
-
-    const resolution = stream.resolution || '1280x720';
-    const bitrate = stream.bitrate || 2500;
-    const fps = stream.fps || 30;
-
-    return [
-      '-nostdin',
-      '-loglevel', 'warning',
-      '-stats',
-      '-re',
-      '-fflags', '+genpts+igndts+discardcorrupt',
-      '-avoid_negative_ts', 'make_zero',
-      '-f', 'concat',
-      '-safe', '0',
-      '-i', concatFile,
-      '-c:v', 'libx264',
-      '-preset', 'veryfast',
-      '-tune', 'zerolatency',
-      '-profile:v', 'high',
-      '-level', '4.1',
-      '-b:v', `${bitrate}k`,
-      '-maxrate', `${Math.round(bitrate * 1.1)}k`,
-      '-bufsize', `${bitrate * 2}k`,
-      '-pix_fmt', 'yuv420p',
-      '-g', String(fps * 2),
-      '-keyint_min', String(fps),
-      '-sc_threshold', '0',
-      '-s', resolution,
-      '-r', String(fps),
-      '-c:a', 'aac',
-      '-b:a', '128k',
-      '-ar', '44100',
-      '-ac', '2',
-      '-f', 'flv',
-      '-flvflags', 'no_duration_filesize',
-      rtmpUrl
-    ];
-  }
-
   let audioPaths = [];
-  const audios = playlist.is_shuffle ? shuffleArray(playlist.audios) : playlist.audios;
+  let audioConcatFile = null;
 
-  for (const audio of audios) {
-    const relPath = audio.filepath.startsWith('/') ? audio.filepath.substring(1) : audio.filepath;
-    const fullPath = path.join(projectRoot, 'public', relPath);
-    if (!fs.existsSync(fullPath)) {
-      throw new Error(`Audio file not found: ${fullPath}`);
+  if (hasAudio) {
+    const audios = playlist.is_shuffle ? shuffleArray(playlist.audios) : playlist.audios;
+    for (const audio of audios) {
+      const relPath = audio.filepath.startsWith('/') ? audio.filepath.substring(1) : audio.filepath;
+      const fullPath = path.join(projectRoot, 'public', relPath);
+      if (!fs.existsSync(fullPath)) {
+        throw new Error(`Audio file not found: ${fullPath}`);
+      }
+      audioPaths.push(fullPath);
     }
-    audioPaths.push(fullPath);
-  }
-
-  const audioConcatFile = path.join(tempDir, `playlist_audio_${stream.id}.txt`);
-  let audioContent = '';
-  for (let i = 0; i < 10000; i++) {
-    for (const ap of audioPaths) {
-      audioContent += `file '${ap.replace(/\\/g, '/')}'\n`;
+    audioConcatFile = path.join(tempDir, `playlist_audio_${stream.id}.txt`);
+    let audioContent = '';
+    for (let i = 0; i < 10000; i++) {
+      for (const ap of audioPaths) {
+        audioContent += `file '${ap.replace(/\\/g, '/')}'\n`;
+      }
     }
-  }
-  fs.writeFileSync(audioConcatFile, audioContent);
-
-  if (!stream.use_advanced_settings) {
-    return [
-      '-nostdin',
-      '-loglevel', 'warning',
-      '-stats',
-      '-re',
-      '-fflags', '+genpts+igndts+discardcorrupt',
-      '-avoid_negative_ts', 'make_zero',
-      '-f', 'concat',
-      '-safe', '0',
-      '-i', concatFile,
-      '-re',
-      '-f', 'concat',
-      '-safe', '0',
-      '-i', audioConcatFile,
-      '-map', '0:v:0',
-      '-map', '1:a:0',
-      '-c:v', 'copy',
-      '-c:a', 'copy',
-      '-f', 'flv',
-      '-flvflags', 'no_duration_filesize',
-      rtmpUrl
-    ];
+    fs.writeFileSync(audioConcatFile, audioContent);
   }
 
-  const resolution = stream.resolution || '1280x720';
-  const bitrate = stream.bitrate || 2500;
-  const fps = stream.fps || 30;
+  const hasWatermark = !!stream.watermark_path;
+  const hasOverlayText = !!stream.overlay_text;
+  const forceAdvanced = stream.use_advanced_settings || hasWatermark || hasOverlayText;
 
-  return [
+  let baseArgs = [
     '-nostdin',
     '-loglevel', 'warning',
     '-stats',
@@ -554,13 +471,86 @@ async function buildFFmpegArgsForPlaylist(stream, playlist) {
     '-avoid_negative_ts', 'make_zero',
     '-f', 'concat',
     '-safe', '0',
-    '-i', concatFile,
-    '-re',
-    '-f', 'concat',
-    '-safe', '0',
-    '-i', audioConcatFile,
-    '-map', '0:v:0',
-    '-map', '1:a:0',
+    '-i', concatFile
+  ];
+
+  if (hasAudio) {
+    baseArgs.push('-re', '-f', 'concat', '-safe', '0', '-i', audioConcatFile);
+  }
+
+  let filterComplex = '';
+  let videoInputIdx = 0;
+  let currentPad = `[${videoInputIdx}:v]`;
+  let inputCount = hasAudio ? 2 : 1;
+
+  if (hasWatermark) {
+    const wmPath = stream.watermark_path.startsWith('/') ? stream.watermark_path.substring(1) : stream.watermark_path;
+    const fullWmPath = path.join(projectRoot, 'public', wmPath);
+    if (fs.existsSync(fullWmPath)) {
+      baseArgs.push('-i', fullWmPath);
+      const wmIdx = inputCount++;
+      let overlayPos = 'main_w-overlay_w-10:10';
+      if (stream.watermark_position === 'top-left') overlayPos = '10:10';
+      if (stream.watermark_position === 'bottom-right') overlayPos = 'main_w-overlay_w-10:main_h-overlay_h-10';
+      if (stream.watermark_position === 'bottom-left') overlayPos = '10:main_h-overlay_h-10';
+      
+      filterComplex += `${currentPad}[${wmIdx}:v]overlay=${overlayPos}`;
+      if (hasOverlayText) {
+        filterComplex += `[v1];`;
+        currentPad = '[v1]';
+      } else {
+        filterComplex += `[vout]`;
+      }
+    } else {
+      console.warn(`Watermark file not found: ${fullWmPath}`);
+    }
+  }
+
+  if (hasOverlayText) {
+    const text = stream.overlay_text.replace(/'/g, "\\'").replace(/:/g, '\\:');
+    const isMarquee = stream.overlay_text_type === 'marquee';
+    let drawtextStr = `drawtext=text='${text}':fontcolor=white:fontsize=24:box=1:boxcolor=black@0.5:boxborderw=5`;
+    if (isMarquee) {
+      drawtextStr += `:x=w-mod(t*150\\,w+tw):y=h-th-20`;
+    } else {
+      let overlayPos = 'x=w-tw-20:y=20'; // top-right
+      if (stream.watermark_position === 'top-left') overlayPos = 'x=20:y=20';
+      if (stream.watermark_position === 'bottom-right') overlayPos = 'x=w-tw-20:y=h-th-20';
+      if (stream.watermark_position === 'bottom-left') overlayPos = 'x=20:y=h-th-20';
+      drawtextStr += `:${overlayPos}`;
+    }
+    filterComplex += `${currentPad}${drawtextStr}[vout]`;
+  }
+
+  if (filterComplex) {
+    baseArgs.push('-filter_complex', filterComplex, '-map', '[vout]');
+  } else {
+    baseArgs.push('-map', `${videoInputIdx}:v:0`);
+  }
+
+  if (hasAudio) {
+    baseArgs.push('-map', '1:a:0');
+  } else {
+    baseArgs.push('-map', '0:a?');
+  }
+
+  if (!forceAdvanced && !filterComplex) {
+    baseArgs.push(
+      '-c:v', 'copy',
+      '-c:a', hasAudio ? 'copy' : 'copy', 
+      '-bsf:a', 'aac_adtstoasc',
+      '-f', 'flv',
+      '-flvflags', 'no_duration_filesize',
+      rtmpUrl
+    );
+    return baseArgs;
+  }
+
+  const resolution = stream.resolution || '1280x720';
+  const bitrate = stream.bitrate || 2500;
+  const fps = stream.fps || 30;
+
+  baseArgs.push(
     '-c:v', 'libx264',
     '-preset', 'veryfast',
     '-tune', 'zerolatency',
@@ -575,11 +565,15 @@ async function buildFFmpegArgsForPlaylist(stream, playlist) {
     '-sc_threshold', '0',
     '-s', resolution,
     '-r', String(fps),
-    '-c:a', 'copy',
+    '-c:a', 'aac',
+    '-b:a', '128k',
+    '-ar', '44100',
     '-f', 'flv',
     '-flvflags', 'no_duration_filesize',
     rtmpUrl
-  ];
+  );
+
+  return baseArgs;
 }
 
 async function buildFFmpegArgs(stream) {
@@ -609,30 +603,11 @@ async function buildFFmpegArgs(stream) {
   const rtmpUrl = `${stream.rtmp_url.replace(/\/$/, '')}/${stream.stream_key}`;
   const loopValue = stream.loop_video ? '-1' : '0';
 
-  if (!stream.use_advanced_settings) {
-    return [
-      '-nostdin',
-      '-loglevel', 'warning',
-      '-stats',
-      '-re',
-      '-fflags', '+genpts+igndts+discardcorrupt',
-      '-avoid_negative_ts', 'make_zero',
-      '-stream_loop', loopValue,
-      '-i', videoPath,
-      '-c:v', 'copy',
-      '-c:a', 'copy',
-      '-bsf:a', 'aac_adtstoasc',
-      '-f', 'flv',
-      '-flvflags', 'no_duration_filesize',
-      rtmpUrl
-    ];
-  }
+  const hasWatermark = !!stream.watermark_path;
+  const hasOverlayText = !!stream.overlay_text;
+  const forceAdvanced = stream.use_advanced_settings || hasWatermark || hasOverlayText;
 
-  const resolution = stream.resolution || '1280x720';
-  const bitrate = stream.bitrate || 2500;
-  const fps = stream.fps || 30;
-
-  return [
+  let baseArgs = [
     '-nostdin',
     '-loglevel', 'warning',
     '-stats',
@@ -640,7 +615,78 @@ async function buildFFmpegArgs(stream) {
     '-fflags', '+genpts+igndts+discardcorrupt',
     '-avoid_negative_ts', 'make_zero',
     '-stream_loop', loopValue,
-    '-i', videoPath,
+    '-i', videoPath
+  ];
+
+  let filterComplex = '';
+  let videoInputIdx = 0;
+  let currentPad = `[${videoInputIdx}:v]`;
+  let inputCount = 1;
+
+  if (hasWatermark) {
+    const wmPath = stream.watermark_path.startsWith('/') ? stream.watermark_path.substring(1) : stream.watermark_path;
+    const fullWmPath = path.join(projectRoot, 'public', wmPath);
+    if (fs.existsSync(fullWmPath)) {
+      baseArgs.push('-i', fullWmPath);
+      const wmIdx = inputCount++;
+      let overlayPos = 'main_w-overlay_w-10:10';
+      if (stream.watermark_position === 'top-left') overlayPos = '10:10';
+      if (stream.watermark_position === 'bottom-right') overlayPos = 'main_w-overlay_w-10:main_h-overlay_h-10';
+      if (stream.watermark_position === 'bottom-left') overlayPos = '10:main_h-overlay_h-10';
+      
+      filterComplex += `${currentPad}[${wmIdx}:v]overlay=${overlayPos}`;
+      if (hasOverlayText) {
+        filterComplex += `[v1];`;
+        currentPad = '[v1]';
+      } else {
+        filterComplex += `[vout]`;
+      }
+    } else {
+      console.warn(`Watermark file not found: ${fullWmPath}`);
+    }
+  }
+
+  if (hasOverlayText) {
+    const text = stream.overlay_text.replace(/'/g, "\\'").replace(/:/g, '\\:');
+    const isMarquee = stream.overlay_text_type === 'marquee';
+    let drawtextStr = `drawtext=text='${text}':fontcolor=white:fontsize=24:box=1:boxcolor=black@0.5:boxborderw=5`;
+    if (isMarquee) {
+      drawtextStr += `:x=w-mod(t*150\\,w+tw):y=h-th-20`;
+    } else {
+      let overlayPos = 'x=w-tw-20:y=20'; // top-right
+      if (stream.watermark_position === 'top-left') overlayPos = 'x=20:y=20';
+      if (stream.watermark_position === 'bottom-right') overlayPos = 'x=w-tw-20:y=h-th-20';
+      if (stream.watermark_position === 'bottom-left') overlayPos = 'x=20:y=h-th-20';
+      drawtextStr += `:${overlayPos}`;
+    }
+    filterComplex += `${currentPad}${drawtextStr}[vout]`;
+  }
+
+  if (filterComplex) {
+    baseArgs.push('-filter_complex', filterComplex, '-map', '[vout]');
+  } else {
+    baseArgs.push('-map', `${videoInputIdx}:v:0`);
+  }
+
+  baseArgs.push('-map', '0:a?');
+
+  if (!forceAdvanced && !filterComplex) {
+    baseArgs.push(
+      '-c:v', 'copy',
+      '-c:a', 'copy',
+      '-bsf:a', 'aac_adtstoasc',
+      '-f', 'flv',
+      '-flvflags', 'no_duration_filesize',
+      rtmpUrl
+    );
+    return baseArgs;
+  }
+
+  const resolution = stream.resolution || '1280x720';
+  const bitrate = stream.bitrate || 2500;
+  const fps = stream.fps || 30;
+
+  baseArgs.push(
     '-c:v', 'libx264',
     '-preset', 'veryfast',
     '-tune', 'zerolatency',
@@ -662,7 +708,9 @@ async function buildFFmpegArgs(stream) {
     '-f', 'flv',
     '-flvflags', 'no_duration_filesize',
     rtmpUrl
-  ];
+  );
+
+  return baseArgs;
 }
 
 

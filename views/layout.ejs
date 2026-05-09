@@ -119,6 +119,10 @@
           <i class="ti ti-chart-bar text-lg"></i>
           <span>Analytics</span>
         </a>
+        <a href="/schedule" class="sidebar-nav-item <%= active === 'schedule' ? 'active' : '' %>">
+          <i class="ti ti-calendar-event text-lg"></i>
+          <span>Jadwal</span>
+        </a>
         <a href="/settings" class="sidebar-nav-item <%= active === 'settings' ? 'active' : '' %>">
           <i class="ti ti-adjustments-horizontal text-lg"></i>
           <span>Pengaturan</span>
@@ -177,7 +181,7 @@
       <div class="hidden lg:fixed lg:flex top-0 right-0 left-56 items-center justify-between h-14 px-6 z-10" style="background:rgba(255,255,255,0.92);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-bottom:1px solid #e8edf3;box-shadow:0 1px 8px rgba(0,0,0,0.05)">
         <!-- Page Title -->
         <div class="flex items-center gap-2">
-          <% const pageTitles = { dashboard: 'Dashboard', rotations: 'Tugas Live', gallery: 'Media Gallery', playlist: 'Playlist', analytics: 'Analytics', settings: 'Pengaturan', history: 'Log Activity', users: 'Kelola Users', overview: 'Overview' }; %>
+        <% const pageTitles = { dashboard: 'Dashboard', rotations: 'Tugas Live', gallery: 'Media Gallery', playlist: 'Playlist', analytics: 'Analytics', schedule: 'Jadwal Stream', settings: 'Pengaturan', history: 'Log Activity', users: 'Kelola Users', overview: 'Overview' }; %>
           <span class="text-sm font-semibold text-slate-700"><%= pageTitles[active] || 'LaStream' %></span>
         </div>
         <!-- Right controls -->
@@ -235,6 +239,10 @@
       <a href="/analytics" class="bottom-nav-item <%= active === 'analytics' ? 'bottom-nav-active' : '' %>">
         <i class="ti ti-chart-bar"></i>
         <span>Analytics</span>
+      </a>
+      <a href="/schedule" class="bottom-nav-item <%= active === 'schedule' ? 'bottom-nav-active' : '' %>">
+        <i class="ti ti-calendar-event"></i>
+        <span>Jadwal</span>
       </a>
       <a href="/settings" class="bottom-nav-item <%= active === 'settings' ? 'bottom-nav-active' : '' %>">
         <i class="ti ti-adjustments-horizontal"></i>
