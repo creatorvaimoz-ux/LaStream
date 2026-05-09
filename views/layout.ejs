@@ -25,18 +25,21 @@
         },
         extend: {
           colors: {
-            'primary': '#0077B6',
-            'secondary': '#005F8A',
-            'dark': {
-              '900': '#0f172a',
-              '800': '#1e293b',
-              '700': '#334155',
-              '600': '#475569',
-              '500': '#64748b',
-              '400': '#94a3b8',
-              '300': '#cbd5e1',
-              '200': '#e2e8f0',
-              '100': '#f1f5f9',
+            'primary': '#0284C7',
+            'secondary': '#0891B2',
+            'gold': '#F59E0B',
+            'ocean': {
+              '950': '#001e3c',
+              '900': '#003058',
+              '800': '#00426e',
+              '700': '#0369a1',
+              '600': '#0284c7',
+              '500': '#0891b2',
+              '400': '#22d3ee',
+              '300': '#7dd3f8',
+              '200': '#bae6fd',
+              '100': '#e0f2fe',
+              '50':  '#f0f9ff',
             }
           }
         }
@@ -61,41 +64,43 @@
      }
    </script>
 </head>
-<body class="bg-slate-100 text-slate-800 font-inter">
+<body class="bg-sky-50 text-ocean-900 font-inter" style="background:linear-gradient(135deg,#e0f2fe 0%,#f0f9ff 60%,#e8f4fb 100%);min-height:100vh">
   <div
-    class="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white shadow-sm border-b border-slate-200 flex items-center justify-between px-6 z-30">
+    class="lg:hidden fixed top-0 left-0 right-0 h-16 flex items-center justify-between px-6 z-30" style="background:linear-gradient(135deg,#001e3c,#003058);box-shadow:0 2px 16px rgba(0,30,60,0.3);border-bottom:1px solid rgba(255,255,255,0.08)">
     <div class="flex items-center">
       <img src="/images/logo_mobile.svg" alt="LaStream Logo" class="h-8">
     </div>
     <div class="flex items-center gap-1">
-      <div id="mobile-server-time" class="hidden items-center gap-1.5 text-slate-500 text-sm mr-2">
+      <div id="mobile-server-time" class="hidden items-center gap-1.5 text-sm mr-2" style="color:rgba(186,230,253,0.8)">
         <span id="mobile-server-date">--</span>
-        <span class="text-slate-300">•</span>
-        <span id="mobile-server-clock" class="tabular-nums">--:--:--</span>
+        <span style="color:rgba(125,211,248,0.5)">•</span>
+        <span id="mobile-server-clock" class="tabular-nums" style="color:#7dd3f8">--:--:--</span>
       </div>
       <div id="mobile-separator" class="hidden h-4 w-px bg-slate-300 mr-1"></div>
       <div class="relative">
-        <button id="mobile-notification-btn" class="p-2 text-slate-500 hover:text-slate-800 transition-colors relative">
+        <button id="mobile-notification-btn" class="p-2 transition-colors relative" style="color:rgba(186,230,253,0.8)">
           <i class="ti ti-bell text-lg"></i>
-          <span class="hidden absolute top-0.5 right-0.5 w-2 h-2 bg-red-500 rounded-full"></span>
+          <span class="hidden absolute top-0.5 right-0.5 w-2 h-2 bg-amber-400 rounded-full"></span>
         </button>
       </div>
     </div>
   </div>
   <div class="flex">
     <!-- Sidebar Desktop -->
-    <div class="hidden lg:flex lg:fixed lg:flex-col w-56 h-screen overflow-hidden z-20" style="background:linear-gradient(180deg,#1a2840 0%,#162035 100%);box-shadow:4px 0 24px rgba(0,0,0,0.18)">
+    <div class="hidden lg:flex lg:fixed lg:flex-col w-56 h-screen overflow-hidden z-20" style="background:linear-gradient(180deg,#001e3c 0%,#003058 55%,#00426e 100%);box-shadow:4px 0 28px rgba(0,20,50,0.45)">
       <!-- Logo -->
-      <div class="flex items-center gap-3 px-5 h-16" style="border-bottom:1px solid rgba(255,255,255,0.07);background:rgba(0,0,0,0.12)">
+      <div class="flex items-center gap-3 px-5 h-16 relative" style="border-bottom:1px solid rgba(2,132,199,0.2);background:rgba(0,0,0,0.15)">
         <img src="/images/logo.svg" alt="LaStream Logo" class="w-8 h-8">
         <div>
           <span class="text-white font-bold text-base tracking-tight">LaStream</span>
-          <span class="block text-xs -mt-0.5" style="color:rgba(148,163,184,0.7)">by Vaimoz</span>
+          <span class="block text-xs -mt-0.5" style="color:rgba(125,211,248,0.7)">by Vaimoz</span>
         </div>
+        <!-- Lamongan wave accent line -->
+        <div class="sidebar-wave-accent"></div>
       </div>
       <!-- Menu Label -->
       <div class="px-4 pt-5 pb-2">
-        <span class="text-[10px] font-semibold uppercase tracking-widest" style="color:rgba(148,163,184,0.45)">Menu</span>
+        <span class="text-[10px] font-semibold uppercase tracking-widest" style="color:rgba(125,211,248,0.45)">Menu</span>
       </div>
       <!-- Navigation -->
       <nav class="flex-1 px-3 space-y-1 overflow-y-auto">
@@ -133,7 +138,7 @@
         </a>
         <% if (req.session && req.session.user_role === 'admin') { %>
         <div class="pt-4 pb-1 px-4">
-          <span class="text-[10px] font-semibold uppercase tracking-widest" style="color:rgba(148,163,184,0.45)">Admin</span>
+          <span class="text-[10px] font-semibold uppercase tracking-widest" style="color:rgba(245,158,11,0.6)">Admin</span>
         </div>
         <a href="/users" class="sidebar-nav-item <%= active === 'users' ? 'active' : '' %>">
           <i class="ti ti-users text-lg"></i>
@@ -144,28 +149,28 @@
       <!-- Profile -->
       <div style="border-top:1px solid rgba(255,255,255,0.07)">
         <div class="relative" id="profile-menu-container">
-          <button id="profile-menu-button" class="w-full flex items-center gap-3 px-4 py-3.5 transition-colors" style="background:transparent" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
-            <div class="w-9 h-9 rounded-full flex-shrink-0 overflow-hidden" style="outline:2px solid rgba(0,119,182,0.5);outline-offset:1px">
+          <button id="profile-menu-button" class="w-full flex items-center gap-3 px-4 py-3.5 transition-colors" style="background:transparent" onmouseover="this.style.background='rgba(2,132,199,0.1)'" onmouseout="this.style.background='transparent'">
+            <div class="w-9 h-9 rounded-full flex-shrink-0 overflow-hidden" style="outline:2px solid rgba(8,145,178,0.55);outline-offset:1px">
               <%- helpers.getAvatar(req) %>
             </div>
             <div class="flex-1 text-left min-w-0">
               <div class="text-sm font-semibold text-white truncate"><%= helpers.getUsername(req) %></div>
-              <div class="text-xs flex items-center gap-1" style="color:rgba(148,163,184,0.6)">
-                <span class="w-1.5 h-1.5 rounded-full bg-green-400 inline-block"></span>Online
+              <div class="text-xs flex items-center gap-1" style="color:rgba(125,211,248,0.65)">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block"></span>Online
               </div>
             </div>
-            <i class="ti ti-chevron-up text-sm" style="color:rgba(148,163,184,0.5)"></i>
+            <i class="ti ti-chevron-up text-sm" style="color:rgba(125,211,248,0.5)"></i>
           </button>
         </div>
       </div>
     </div>
     <!-- Profile Dropdown -->
-    <div id="profile-dropdown" class="fixed hidden" style="background:linear-gradient(180deg,#1e2d42,#192536);border:1px solid rgba(255,255,255,0.08)">
-      <div class="px-4 py-3" style="border-bottom:1px solid rgba(255,255,255,0.07)">
-        <div class="text-xs text-slate-400"><%= req.session.email || 'User' %></div>
+    <div id="profile-dropdown" class="fixed hidden" style="background:linear-gradient(180deg,#002d58,#001e3c);border:1px solid rgba(2,132,199,0.2)">
+      <div class="px-4 py-3" style="border-bottom:1px solid rgba(2,132,199,0.15)">
+        <div class="text-xs" style="color:rgba(125,211,248,0.7)"><%= req.session.email || 'User' %></div>
       </div>
       <div class="py-1">
-        <a href="/settings" class="flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-300 hover:text-white transition-colors" onmouseover="this.style.background='rgba(255,255,255,0.07)'" onmouseout="this.style.background=''">
+        <a href="/settings" class="flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors" style="color:#bae6fd" onmouseover="this.style.background='rgba(2,132,199,0.12)'" onmouseout="this.style.background=''">
           <i class="ti ti-settings text-base"></i>
           <span>Settings</span>
         </a>
@@ -178,25 +183,25 @@
     <!-- Main Content -->
     <div class="w-full lg:ml-56 flex flex-col min-h-screen">
       <!-- Top Bar -->
-      <div class="hidden lg:fixed lg:flex top-0 right-0 left-56 items-center justify-between h-14 px-6 z-10" style="background:rgba(255,255,255,0.92);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-bottom:1px solid #e8edf3;box-shadow:0 1px 8px rgba(0,0,0,0.05)">
+      <div class="hidden lg:fixed lg:flex top-0 right-0 left-56 items-center justify-between h-14 px-6 z-10 relative" style="background:rgba(240,249,255,0.95);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-bottom:1px solid #bae6fd;box-shadow:0 2px 12px rgba(0,80,150,0.07)">
         <!-- Page Title -->
         <div class="flex items-center gap-2">
         <% const pageTitles = { dashboard: 'Dashboard', rotations: 'Tugas Live', gallery: 'Media Gallery', playlist: 'Playlist', analytics: 'Analytics', schedule: 'Jadwal Stream', settings: 'Pengaturan', history: 'Log Activity', users: 'Kelola Users', overview: 'Overview' }; %>
-          <span class="text-sm font-semibold text-slate-700"><%= pageTitles[active] || 'LaStream' %></span>
+          <span class="text-sm font-semibold" style="color:#0369a1"><%= pageTitles[active] || 'LaStream' %></span>
         </div>
         <!-- Right controls -->
         <div class="flex items-center gap-3">
-          <div id="server-time-display" class="flex items-center gap-1.5 text-slate-400 text-xs">
-            <i class="ti ti-clock text-slate-300 text-sm"></i>
-            <span id="server-date">--</span>
-            <span class="text-slate-200">•</span>
-            <span id="server-clock" class="tabular-nums font-medium text-slate-500">--:--:--</span>
+          <div id="server-time-display" class="flex items-center gap-1.5 text-xs" style="color:#7dd3f8">
+            <i class="ti ti-clock text-sm" style="color:#bae6fd"></i>
+            <span id="server-date" style="color:#0369a1">--</span>
+            <span style="color:#bae6fd">•</span>
+            <span id="server-clock" class="tabular-nums font-medium" style="color:#0284c7">--:--:--</span>
           </div>
-          <div class="h-4 w-px bg-slate-200"></div>
+          <div class="h-4 w-px" style="background:#bae6fd"></div>
           <div class="relative">
-            <button id="notification-btn" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all relative">
+            <button id="notification-btn" class="p-1.5 rounded-lg transition-all relative" style="color:#0284c7" onmouseover="this.style.background='#e0f2fe'" onmouseout="this.style.background='transparent'">
               <i class="ti ti-bell text-lg"></i>
-              <span class="hidden absolute top-1 right-1 w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+              <span class="hidden absolute top-1 right-1 w-1.5 h-1.5 bg-amber-400 rounded-full"></span>
             </button>
             <div id="notification-dropdown" class="hidden absolute right-0 mt-2 w-80 bg-white border border-slate-200 rounded-xl shadow-xl z-[60]" style="box-shadow:0 8px 32px rgba(0,0,0,0.12)">
               <div class="p-3.5 border-b border-slate-100 flex items-center justify-between">
@@ -213,16 +218,16 @@
       </div>
       <!-- Footer -->
       <div class="hidden lg:flex justify-end items-center pr-6 pb-4 pt-2">
-        <div class="flex items-center gap-2 text-xs text-slate-400">
-          LaStream
-          <span class="font-semibold px-1.5 py-0.5 rounded-md text-[10px]" style="background:#f1f5f9;color:#64748b">v<%= appVersion %></span>
-          <span class="text-slate-300">·</span>
+        <div class="flex items-center gap-2 text-xs" style="color:#0891b2">
+          🌊 LaStream
+          <span class="font-semibold px-1.5 py-0.5 rounded-md text-[10px]" style="background:#e0f2fe;color:#0369a1">v<%= appVersion %></span>
+          <span style="color:#7dd3f8">·</span>
           <span>by Vaimoz</span>
         </div>
       </div>
     </div>
   </div>
-  <div class="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-lg z-30">
+  <div class="lg:hidden fixed bottom-0 left-0 right-0 z-30" style="background:linear-gradient(180deg,#002a52,#001e3c);border-top:1px solid rgba(2,132,199,0.25);box-shadow:0 -4px 20px rgba(0,20,50,0.3)">
     <nav class="flex justify-around items-center h-16">
       <a href="/dashboard" class="bottom-nav-item <%= active === 'dashboard' ? 'bottom-nav-active' : '' %>">
         <i class="ti ti-layout-dashboard"></i>
@@ -258,27 +263,27 @@
       </button>
     </nav>
     <div id="mobile-profile-popup"
-      class="fixed bottom-16 right-2 bg-white rounded-lg shadow-xl border border-slate-200 overflow-hidden hidden transform transition-all duration-200 ease-out opacity-0 translate-y-4 w-40">
+      class="fixed bottom-16 right-2 rounded-lg overflow-hidden hidden transform transition-all duration-200 ease-out opacity-0 translate-y-4 w-40" style="background:linear-gradient(180deg,#002a52,#001e3c);border:1px solid rgba(2,132,199,0.25);box-shadow:0 8px 28px rgba(0,20,50,0.4)">
       <div class="py-2 px-3">
-        <div class="text-sm font-medium mb-1 text-slate-800">
+        <div class="text-sm font-medium mb-1" style="color:#e0f2fe">
           <%= helpers.getUsername(req) %>
         </div>
-        <div class="text-xs text-slate-400 mb-2">
+        <div class="text-xs mb-2" style="color:rgba(125,211,248,0.65)">
           <%= req.session.email || '' %>
         </div>
-        <div class="h-px bg-slate-200 my-2"></div>
+        <div class="h-px my-2" style="background:rgba(2,132,199,0.2)"></div>
         <% if (req.session && req.session.user_role === 'admin') { %>
-        <a href="/users" class="flex items-center py-2 text-slate-600 hover:text-slate-900 text-sm">
+        <a href="/users" class="flex items-center py-2 text-sm" style="color:#bae6fd">
           <i class="ti ti-users mr-2"></i>
           <span>Users</span>
         </a>
         <% } %>
-        <a href="/settings" class="flex items-center py-2 text-slate-600 hover:text-slate-900 text-sm">
+        <a href="/settings" class="flex items-center py-2 text-sm" style="color:#bae6fd">
           <i class="ti ti-settings mr-2"></i>
           <span>Settings</span>
         </a>
-        <div class="h-px bg-slate-200 my-2"></div>
-        <a href="/logout" class="flex items-center py-2 text-red-500 hover:text-red-400 text-sm">
+        <div class="h-px my-2" style="background:rgba(2,132,199,0.2)"></div>
+        <a href="/logout" class="flex items-center py-2 text-red-400 hover:text-red-300 text-sm">
           <i class="ti ti-logout mr-2"></i>
           <span>Sign Out</span>
         </a>
@@ -286,9 +291,9 @@
     </div>
   </div>
   <div id="mobile-notification-popup"
-    class="fixed bottom-16 right-2 bg-white rounded-lg shadow-xl border border-slate-200 overflow-hidden hidden transform transition-all duration-200 ease-out opacity-0 translate-y-4 w-72 z-[60]">
-    <div class="p-3 border-b border-slate-200 flex items-center justify-between">
-      <h3 class="font-medium text-slate-800">Notifications</h3>
+    class="fixed bottom-16 right-2 rounded-lg overflow-hidden hidden transform transition-all duration-200 ease-out opacity-0 translate-y-4 w-72 z-[60]" style="background:linear-gradient(180deg,#002a52,#001e3c);border:1px solid rgba(2,132,199,0.25);box-shadow:0 8px 28px rgba(0,20,50,0.4)">
+    <div class="p-3 flex items-center justify-between" style="border-bottom:1px solid rgba(2,132,199,0.2)">
+      <h3 class="font-medium" style="color:#e0f2fe">Notifications</h3>
     </div>
     <div class="max-h-80 overflow-y-auto" id="mobile-notification-list">
     </div>
@@ -319,13 +324,13 @@
     position: fixed;
     z-index: 100;
     min-width: 200px;
-    border-radius: 8px;
+    border-radius: 10px;
     transition: all 0.2s ease;
     opacity: 1;
     transform: translateY(0);
     pointer-events: auto;
     width: auto;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 8px 32px rgba(0, 20, 60, 0.45);
     bottom: 70px;
     left: 14px;
   }
@@ -345,42 +350,55 @@
       top: 100px;
     }
   }
-  /* Sidebar Nav Item */
+  /* Sidebar Nav Item — Lamongan Sea */
   .sidebar-nav-item {
     display: flex;
     align-items: center;
     gap: 0.75rem;
     padding: 0.6rem 0.875rem;
     border-radius: 0.5rem;
-    color: #94a3b8;
+    color: #93c5d8;
     font-size: 0.875rem;
     font-weight: 500;
     transition: all 0.15s ease;
     text-decoration: none;
+    position: relative;
   }
   .sidebar-nav-item:hover {
-    background-color: rgba(51, 65, 85, 0.5);
-    color: #e2e8f0;
+    background-color: rgba(2, 132, 199, 0.18);
+    color: #e0f2fe;
   }
   .sidebar-nav-item.active {
-    background-color: #0077B6;
+    background: linear-gradient(135deg, #0284C7 0%, #0891B2 100%);
     color: #ffffff;
-    box-shadow: 0 2px 8px rgba(0, 119, 182, 0.35);
+    box-shadow: 0 3px 12px rgba(2, 132, 199, 0.4);
+  }
+  .sidebar-nav-item.active::before {
+    content: '';
+    position: absolute;
+    left: -0.875rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 60%;
+    background: #F59E0B;
+    border-radius: 0 3px 3px 0;
   }
   .sidebar-nav-item.active i {
     color: #ffffff;
   }
   .text-logout {
-    color: #FF5555;
+    color: #f87171;
   }
   .text-logout:hover {
-    color: #FF7777;
+    color: #fca5a5;
   }
   @media (max-width: 1023px) {
     body {
       padding-top: 8px;
     }
   }
+  /* Bottom Nav — Lamongan Sea */
   .bottom-nav-item {
     display: flex;
     flex-direction: column;
@@ -389,9 +407,13 @@
     flex: 1;
     text-align: center;
     padding: 8px 0;
-    color: #94a3b8;
+    color: rgba(186, 230, 253, 0.55);
     position: relative;
     transition: color 0.2s ease;
+    text-decoration: none;
+    background: none;
+    border: none;
+    cursor: pointer;
   }
   .bottom-nav-item i {
     font-size: 22px;
@@ -401,10 +423,10 @@
     font-size: 11px;
   }
   .bottom-nav-item:hover {
-    color: #475569;
+    color: #7dd3f8;
   }
   .bottom-nav-active {
-    color: #0077B6;
+    color: #38bdf8 !important;
   }
   .bottom-nav-active::before {
     content: '';
@@ -412,10 +434,10 @@
     top: 0;
     left: 50%;
     transform: translateX(-50%);
-    width: 24px;
+    width: 28px;
     height: 3px;
-    background-color: #0077B6;
-    border-radius: 0 0 4px 4px;
+    background: linear-gradient(90deg, #0284C7, #F59E0B);
+    border-radius: 0 0 6px 6px;
   }
   @media (max-width: 1023px) {
     .min-h-screen {
