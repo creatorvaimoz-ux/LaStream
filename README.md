@@ -32,7 +32,7 @@
 
 ## ⚡ Quick Install (Cara Termudah)
 
-> **Untuk VPS Ubuntu 20.04 / 22.04** — satu perintah, semua otomatis.
+> **Untuk VPS Ubuntu 20.04 / 22.04 / 24.04** — satu perintah, semua otomatis.
 
 **1. Install dependensi dasar:**
 ```bash
@@ -62,7 +62,7 @@ Akun pertama yang didaftarkan otomatis menjadi **Admin**.
 
 | Kebutuhan | Versi |
 |---|---|
-| OS | Ubuntu 20.04 / 22.04 |
+| OS | Ubuntu 20.04 / 22.04 / **24.04 LTS** ✅ |
 | Node.js | 20+ (LTS) |
 | FFmpeg | Terbaru |
 | RAM | Minimal 1 GB |
