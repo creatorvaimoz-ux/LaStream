@@ -88,10 +88,21 @@
     <div class="border-t border-slate-200 px-3 py-1 flex items-center justify-between">
       <div>
         <% if (rotation.status === 'active') { %>
+        <%
+          const _startMs = rotation.start_time ? new Date(rotation.start_time).getTime() : 0;
+          const _isWaiting = _startMs > Date.now();
+        %>
+        <% if (_isWaiting) { %>
+        <span class="flex items-center text-sky-400">
+          <i class="ti ti-clock text-[10px] mr-1"></i>
+          <span class="text-[10px] font-medium">Menunggu Jadwal</span>
+        </span>
+        <% } else { %>
         <span class="flex items-center text-green-400">
           <span class="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse mr-1"></span>
-          <span class="text-[10px] font-medium">Running • Item <%= (rotation.current_index || 0) + 1 %>/<%= rotation.item_count %></span>
+          <span class="text-[10px] font-medium">Live • Item <%= (rotation.current_index || 0) + 1 %>/<%= rotation.item_count %></span>
         </span>
+        <% } %>
         <% } else if (rotation.status === 'paused') { %>
         <span class="flex items-center text-yellow-400">
           <i class="ti ti-player-pause text-[10px] mr-1"></i>
@@ -213,9 +224,19 @@
           </td>
           <td class="px-6 py-4">
             <% if (rotation.status === 'active') { %>
-            <span class="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-full inline-flex items-center gap-1">
-              Running
+            <%
+              const _sMs = rotation.start_time ? new Date(rotation.start_time).getTime() : 0;
+              const _waiting = _sMs > Date.now();
+            %>
+            <% if (_waiting) { %>
+            <span class="px-2 py-1 bg-sky-500/15 text-sky-400 text-xs rounded-full inline-flex items-center gap-1">
+              <i class="ti ti-clock text-xs"></i>Menunggu Jadwal
             </span>
+            <% } else { %>
+            <span class="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-full inline-flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>Live
+            </span>
+            <% } %>
             <% } else if (rotation.status === 'paused') { %>
             <span class="px-2 py-1 bg-yellow-500/20 text-yellow-400 text-xs rounded-full inline-flex items-center gap-1">
               <i class="ti ti-player-pause text-xs"></i>Paused
@@ -233,18 +254,25 @@
               <div class="text-sm font-medium text-slate-800">Item <%= (rotation.current_index || 0) + 1 %>/<%= rotation.item_count %></div>
               <% if (rotation.start_time && rotation.end_time) { %>
                 <%
-                  const startDate = new Date(rotation.start_time.replace('T', ' ').replace(/-/g, '/'));
-                  const endDate = new Date(rotation.end_time.replace('T', ' ').replace(/-/g, '/'));
-                  const formatDate = (d) => {
-                    const day = String(d.getDate()).padStart(2, '0');
-                    const month = String(d.getMonth() + 1).padStart(2, '0');
-                    const year = d.getFullYear();
-                    const hours = String(d.getHours()).padStart(2, '0');
-                    const mins = String(d.getMinutes()).padStart(2, '0');
-                    return `${day}/${month}/${year}, ${hours}:${mins}`;
+                  const _st = new Date(rotation.start_time);
+                  const _et = new Date(rotation.end_time);
+                  const _now = new Date();
+                  const _isWaitingItem = _st > _now;
+                  const _fmt = (d) => {
+                    const day = String(d.getDate()).padStart(2,'0');
+                    const mon = String(d.getMonth()+1).padStart(2,'0');
+                    const yr = d.getFullYear();
+                    const h = String(d.getHours()).padStart(2,'0');
+                    const m = String(d.getMinutes()).padStart(2,'0');
+                    return `${day}/${mon}/${yr}, ${h}:${m}`;
                   };
                 %>
-                <div class="text-xs text-slate-500">Schedule: <%= formatDate(startDate) %> - <%= formatDate(endDate).split(', ')[1] %></div>
+                <div class="text-xs text-slate-500">Jadwal: <%= _fmt(_st) %> - <%= String(_et.getHours()).padStart(2,'0') %>:<%= String(_et.getMinutes()).padStart(2,'0') %></div>
+                <% if (_isWaitingItem) { %>
+                <div class="text-xs text-sky-500 font-medium mt-0.5">⏳ Stream akan mulai otomatis</div>
+                <% } else { %>
+                <div class="text-xs text-green-500 font-medium mt-0.5">🔴 Sedang streaming</div>
+                <% } %>
               <% } %>
             <% } else { %>
               <span class="text-sm text-slate-400">--</span>
