@@ -4640,17 +4640,22 @@ app.get('/rotations', isAuthenticated, async (req, res) => {
     }
     const YoutubeChannel = require('./models/YoutubeChannel');
     const youtubeChannels = await YoutubeChannel.findAll(req.session.userId);
-    const hasYoutubeCredentials = !!(process.env.YOUTUBE_CLIENT_ID && process.env.YOUTUBE_CLIENT_SECRET);
     const isYoutubeConnected = youtubeChannels.length > 0;
     const defaultChannel = youtubeChannels.find(c => c.is_default) || youtubeChannels[0];
-    
-    const initialStreamsData = await Stream.findAllPaginated(req.session.userId, {
-      page: 1,
-      limit: 10,
-      search: ''
+
+    const rotations = await Rotation.findAll(req.session.userId);
+
+    const allVideos = await Video.findAll(req.session.userId);
+    const videos = allVideos.filter(video => {
+      const filepath = (video.filepath || '').toLowerCase();
+      if (filepath.includes('/audio/')) return false;
+      if (filepath.endsWith('.m4a') || filepath.endsWith('.aac') || filepath.endsWith('.mp3')) return false;
+      return true;
     });
-    
-    res.render('dashboard', {
+
+    const playlists = await Playlist.findAll(req.session.userId);
+
+    res.render('rotations', {
       title: 'Tugas Live',
       active: 'rotations',
       user: user,
@@ -4659,9 +4664,9 @@ app.get('/rotations', isAuthenticated, async (req, res) => {
       youtubeChannelName: defaultChannel?.channel_name || '',
       youtubeChannelThumbnail: defaultChannel?.channel_thumbnail || '',
       youtubeSubscriberCount: defaultChannel?.subscriber_count || '0',
-      hasYoutubeCredentials: hasYoutubeCredentials,
-      initialStreams: JSON.stringify(initialStreamsData.streams),
-      initialPagination: JSON.stringify(initialStreamsData.pagination)
+      rotations: rotations,
+      videos: videos,
+      playlists: playlists
     });
   } catch (error) {
     console.error('Tugas Live page error:', error);
@@ -4757,7 +4762,8 @@ app.post('/api/rotations', isAuthenticated, uploadThumbnail.any(), async (req, r
         privacy: item.privacy || 'unlisted',
         category: item.category || '22',
         youtube_monetization: item.youtube_monetization === true || item.youtube_monetization === 'true',
-        youtube_closed_captions: item.youtube_closed_captions === true || item.youtube_closed_captions === 'true'
+        youtube_closed_captions: item.youtube_closed_captions === true || item.youtube_closed_captions === 'true',
+        title_alternatives: item.title_alternatives || null
       });
     }
     
@@ -4834,7 +4840,8 @@ app.put('/api/rotations/:id', isAuthenticated, uploadThumbnail.any(), async (req
         privacy: item.privacy || 'unlisted',
         category: item.category || '22',
         youtube_monetization: item.youtube_monetization === true || item.youtube_monetization === 'true',
-        youtube_closed_captions: item.youtube_closed_captions === true || item.youtube_closed_captions === 'true'
+        youtube_closed_captions: item.youtube_closed_captions === true || item.youtube_closed_captions === 'true',
+        title_alternatives: item.title_alternatives || null
       });
     }
     

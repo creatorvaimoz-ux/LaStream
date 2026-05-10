@@ -313,11 +313,23 @@ async function startRotationStream(rotation, item) {
 
     const scheduledStartTime = new Date().toISOString();
 
+    // ── RANDOM TITLE SELECTION ─────────────────────────────────────────────
+    let finalTitle = item.title;
+    const alternatives = Array.isArray(item.title_alternatives)
+      ? item.title_alternatives.filter(t => t && t.trim())
+      : [];
+    if (alternatives.length > 0) {
+      const allTitles = [item.title, ...alternatives];
+      finalTitle = allTitles[Math.floor(Math.random() * allTitles.length)];
+      console.log(`[RotationService] 🎲 Random title selected: "${finalTitle}" (from ${allTitles.length} options)`);
+    }
+    // ──────────────────────────────────────────────────────────────────────
+
     const broadcastResponse = await youtube.liveBroadcasts.insert({
       part: ['snippet', 'status', 'contentDetails'],
       requestBody: {
         snippet: {
-          title: item.title,
+          title: finalTitle,
           description: item.description || '',
           scheduledStartTime: scheduledStartTime
         },
@@ -350,7 +362,7 @@ async function startRotationStream(rotation, item) {
       part: ['snippet', 'cdn'],
       requestBody: {
         snippet: {
-          title: `Stream for ${item.title}`
+          title: `Stream for ${finalTitle}`
         },
         cdn: {
           frameRate: '30fps',
@@ -397,7 +409,7 @@ async function startRotationStream(rotation, item) {
           requestBody: {
             id: broadcast.id,
             snippet: {
-              title: item.title,
+              title: finalTitle,
               description: item.description || '',
               categoryId: item.category || '22',
               tags: tags
@@ -410,7 +422,7 @@ async function startRotationStream(rotation, item) {
     }
 
     const stream = await Stream.create({
-      title: item.title,
+      title: finalTitle,
       video_id: actualVideoId,
       rtmp_url: rtmpUrl,
       stream_key: streamKey,

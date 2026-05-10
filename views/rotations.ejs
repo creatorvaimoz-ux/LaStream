@@ -653,8 +653,31 @@ function addRotationItem() {
           </div>
         </div>
         <div>
-          <label class="text-xs text-slate-500 block mb-1">Title</label>
+          <label class="text-xs text-slate-500 block mb-1">Title <span class="text-slate-400">(Judul Utama)</span></label>
           <input type="text" name="items[${idx}][title]" class="w-full px-3 py-2.5 bg-slate-100 border border-slate-300 rounded-lg text-sm focus:border-primary focus:ring-1 focus:ring-primary" placeholder="Stream title" required>
+        </div>
+        <div class="md:col-span-2">
+          <div class="bg-amber-50 border border-amber-200 rounded-lg overflow-hidden">
+            <div class="px-3 py-2 flex items-center justify-between cursor-pointer hover:bg-amber-100/50 transition-colors select-none random-title-toggle-header" onclick="toggleRandomTitleSection(${idx})">
+              <div class="flex items-center gap-2">
+                <i class="ti ti-dice text-amber-600 text-sm"></i>
+                <span class="text-xs font-semibold text-amber-700">🎲 Judul Acak YouTube</span>
+                <span class="random-title-badge hidden text-[10px] bg-amber-500 text-white rounded-full px-1.5 py-0.5 font-medium"></span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="random-title-status text-[10px] text-amber-500">Nonaktif</span>
+                <i class="ti ti-chevron-down text-amber-400 text-xs random-title-chevron transition-transform duration-200"></i>
+              </div>
+            </div>
+            <div class="hidden random-title-section border-t border-amber-200 p-3 space-y-2">
+              <p class="text-[11px] text-amber-700">Tambah judul alternatif. Saat rotation aktif, judul YouTube akan dipilih <strong>secara acak</strong> dari daftar ini + judul utama.</p>
+              <div class="random-titles-list space-y-1.5"></div>
+              <button type="button" onclick="addRandomTitleInput(${idx})" class="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-700 rounded text-xs font-medium transition-colors border border-dashed border-amber-300">
+                <i class="ti ti-plus text-xs"></i> Tambah Judul Alternatif
+              </button>
+              <input type="hidden" class="random-titles-hidden" name="items[${idx}][title_alternatives_json]" value="">
+            </div>
+          </div>
         </div>
         <div class="md:col-span-2">
           <label class="text-xs text-slate-500 block mb-1">Description</label>
@@ -745,6 +768,82 @@ function addRotationItem() {
   initTagsInput(itemEl, idx);
   initThumbnailUpload(itemEl);
 }
+
+// ── RANDOM TITLE FUNCTIONS ─────────────────────────────────────────────────
+function toggleRandomTitleSection(idx) {
+  const container = document.querySelector(`.rotation-item[data-index="${idx}"]`);
+  if (!container) return;
+  const section = container.querySelector('.random-title-section');
+  const chevron = container.querySelector('.random-title-chevron');
+  const status = container.querySelector('.random-title-status');
+  const badge = container.querySelector('.random-title-badge');
+  if (!section) return;
+
+  const isHidden = section.classList.contains('hidden');
+  section.classList.toggle('hidden');
+  if (chevron) chevron.style.transform = isHidden ? 'rotate(180deg)' : '';
+  if (status) status.textContent = isHidden ? 'Aktif' : 'Nonaktif';
+  if (status) status.className = `random-title-status text-[10px] ${isHidden ? 'text-amber-600 font-semibold' : 'text-amber-500'}`;
+
+  if (!isHidden) {
+    // reset badge when closed
+    if (badge) badge.classList.add('hidden');
+  } else {
+    updateRandomTitleBadge(idx);
+  }
+}
+
+function addRandomTitleInput(idx, value = '') {
+  const container = document.querySelector(`.rotation-item[data-index="${idx}"]`);
+  if (!container) return;
+  const list = container.querySelector('.random-titles-list');
+  if (!list) return;
+
+  const row = document.createElement('div');
+  row.className = 'flex items-center gap-1.5';
+  row.innerHTML = `
+    <span class="text-amber-400 text-xs flex-shrink-0"><i class="ti ti-dice-3"></i></span>
+    <input type="text" class="random-title-input flex-1 px-2 py-1.5 bg-white border border-amber-200 rounded text-xs focus:border-amber-400 focus:ring-1 focus:ring-amber-400" placeholder="Contoh: Judul YouTube alternatif..." value="${value.replace(/"/g, '&quot;')}">
+    <button type="button" onclick="this.parentElement.remove(); updateRandomTitleBadge(${idx}); syncRandomTitles(${idx})" class="text-slate-400 hover:text-red-400 transition-colors flex-shrink-0">
+      <i class="ti ti-x text-xs"></i>
+    </button>
+  `;
+  list.appendChild(row);
+
+  const input = row.querySelector('.random-title-input');
+  input.addEventListener('input', () => {
+    syncRandomTitles(idx);
+    updateRandomTitleBadge(idx);
+  });
+  input.focus();
+  syncRandomTitles(idx);
+  updateRandomTitleBadge(idx);
+}
+
+function syncRandomTitles(idx) {
+  const container = document.querySelector(`.rotation-item[data-index="${idx}"]`);
+  if (!container) return;
+  const inputs = container.querySelectorAll('.random-title-input');
+  const titles = Array.from(inputs).map(i => i.value.trim()).filter(t => t);
+  const hidden = container.querySelector('.random-titles-hidden');
+  if (hidden) hidden.value = JSON.stringify(titles);
+}
+
+function updateRandomTitleBadge(idx) {
+  const container = document.querySelector(`.rotation-item[data-index="${idx}"]`);
+  if (!container) return;
+  const inputs = container.querySelectorAll('.random-title-input');
+  const count = Array.from(inputs).filter(i => i.value.trim()).length;
+  const badge = container.querySelector('.random-title-badge');
+  if (!badge) return;
+  if (count > 0) {
+    badge.textContent = `${count} judul`;
+    badge.classList.remove('hidden');
+  } else {
+    badge.classList.add('hidden');
+  }
+}
+// ──────────────────────────────────────────────────────────────────────────
 
 function initVideoSelector(itemEl, idx) {
   const btn = itemEl.querySelector('.video-selector-btn');
@@ -1087,6 +1186,16 @@ async function saveRotation() {
       originalThumbnailPath = item.dataset.originalThumbnail || null;
     }
     
+    // Baca judul alternatif (random title)
+    const randomTitlesHidden = item.querySelector('.random-titles-hidden');
+    let title_alternatives = null;
+    if (randomTitlesHidden && randomTitlesHidden.value) {
+      try {
+        const parsed = JSON.parse(randomTitlesHidden.value);
+        title_alternatives = parsed.length > 0 ? parsed : null;
+      } catch(e) { title_alternatives = null; }
+    }
+
     items.push({
       order_index: i,
       video_id: videoId,
@@ -1099,7 +1208,8 @@ async function saveRotation() {
       tags,
       thumbnail_upload_index: i,
       thumbnail_path: thumbnailPath,
-      original_thumbnail_path: originalThumbnailPath
+      original_thumbnail_path: originalThumbnailPath,
+      title_alternatives
     });
     
     if (thumbnailInput.files[0]) {
@@ -1274,6 +1384,27 @@ async function editRotation(id) {
               container._tags.push(...tagsArr);
               container._renderTags();
             }
+          }
+
+          // Load judul alternatif (random title)
+          const alternatives = Array.isArray(item.title_alternatives) ? item.title_alternatives : [];
+          if (alternatives.length > 0) {
+            // Buka section
+            const randomSection = itemEl.querySelector('.random-title-section');
+            const chevron = itemEl.querySelector('.random-title-chevron');
+            const status = itemEl.querySelector('.random-title-status');
+            if (randomSection) {
+              randomSection.classList.remove('hidden');
+              if (chevron) chevron.style.transform = 'rotate(180deg)';
+              if (status) {
+                status.textContent = 'Aktif';
+                status.className = 'random-title-status text-[10px] text-amber-600 font-semibold';
+              }
+            }
+            // Tambah input untuk setiap judul alternatif
+            alternatives.forEach(alt => {
+              addRandomTitleInput(rotationItemCount, alt);
+            });
           }
         });
       } else {

@@ -441,6 +441,13 @@ function createTables() {
         db.run(`ALTER TABLE streams ADD COLUMN overlay_text_type TEXT DEFAULT 'static'`, (err) => {
           if (err && !err.message.includes('duplicate column name')) console.error(err.message);
         });
+
+        // Add title_alternatives column to rotation_items for random title feature
+        db.run(`ALTER TABLE rotation_items ADD COLUMN title_alternatives TEXT DEFAULT NULL`, (err) => {
+          if (err && !err.message.includes('duplicate column name')) {
+            console.error('Error adding title_alternatives column to rotation_items:', err.message);
+          }
+        });
         
         resolve();
       });

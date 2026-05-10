@@ -6,6 +6,18 @@ class Rotation {
     if (!row) return row;
     row.youtube_monetization = row.youtube_monetization === 1;
     row.youtube_closed_captions = row.youtube_closed_captions === 1;
+    // Parse title_alternatives JSON string -> array
+    if (row.title_alternatives) {
+      try {
+        row.title_alternatives = typeof row.title_alternatives === 'string'
+          ? JSON.parse(row.title_alternatives)
+          : row.title_alternatives;
+      } catch (e) {
+        row.title_alternatives = [];
+      }
+    } else {
+      row.title_alternatives = [];
+    }
     return row;
   }
 
@@ -201,14 +213,19 @@ class Rotation {
       privacy = 'unlisted',
       category = '22',
       youtube_monetization = false,
-      youtube_closed_captions = false
+      youtube_closed_captions = false,
+      title_alternatives = null
     } = itemData;
+
+    const titleAlternativesStr = title_alternatives
+      ? (Array.isArray(title_alternatives) ? JSON.stringify(title_alternatives) : title_alternatives)
+      : null;
 
     return new Promise((resolve, reject) => {
       db.run(
-        `INSERT INTO rotation_items (id, rotation_id, order_index, video_id, title, description, tags, thumbnail_path, original_thumbnail_path, privacy, category, youtube_monetization, youtube_closed_captions)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [id, rotation_id, order_index, video_id, title, description, tags, thumbnail_path, original_thumbnail_path, privacy, category, youtube_monetization ? 1 : 0, youtube_closed_captions ? 1 : 0],
+        `INSERT INTO rotation_items (id, rotation_id, order_index, video_id, title, description, tags, thumbnail_path, original_thumbnail_path, privacy, category, youtube_monetization, youtube_closed_captions, title_alternatives)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [id, rotation_id, order_index, video_id, title, description, tags, thumbnail_path, original_thumbnail_path, privacy, category, youtube_monetization ? 1 : 0, youtube_closed_captions ? 1 : 0, titleAlternativesStr],
         function(err) {
           if (err) {
             console.error('Error adding rotation item:', err.message);
