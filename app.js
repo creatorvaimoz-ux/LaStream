@@ -4640,22 +4640,17 @@ app.get('/rotations', isAuthenticated, async (req, res) => {
     }
     const YoutubeChannel = require('./models/YoutubeChannel');
     const youtubeChannels = await YoutubeChannel.findAll(req.session.userId);
+    const hasYoutubeCredentials = !!(process.env.YOUTUBE_CLIENT_ID && process.env.YOUTUBE_CLIENT_SECRET);
     const isYoutubeConnected = youtubeChannels.length > 0;
     const defaultChannel = youtubeChannels.find(c => c.is_default) || youtubeChannels[0];
 
-    const rotations = await Rotation.findAll(req.session.userId);
-
-    const allVideos = await Video.findAll(req.session.userId);
-    const videos = allVideos.filter(video => {
-      const filepath = (video.filepath || '').toLowerCase();
-      if (filepath.includes('/audio/')) return false;
-      if (filepath.endsWith('.m4a') || filepath.endsWith('.aac') || filepath.endsWith('.mp3')) return false;
-      return true;
+    const initialStreamsData = await Stream.findAllPaginated(req.session.userId, {
+      page: 1,
+      limit: 10,
+      search: ''
     });
 
-    const playlists = await Playlist.findAll(req.session.userId);
-
-    res.render('rotations', {
+    res.render('dashboard', {
       title: 'Tugas Live',
       active: 'rotations',
       user: user,
@@ -4664,9 +4659,9 @@ app.get('/rotations', isAuthenticated, async (req, res) => {
       youtubeChannelName: defaultChannel?.channel_name || '',
       youtubeChannelThumbnail: defaultChannel?.channel_thumbnail || '',
       youtubeSubscriberCount: defaultChannel?.subscriber_count || '0',
-      rotations: rotations,
-      videos: videos,
-      playlists: playlists
+      hasYoutubeCredentials: hasYoutubeCredentials,
+      initialStreams: JSON.stringify(initialStreamsData.streams),
+      initialPagination: JSON.stringify(initialStreamsData.pagination)
     });
   } catch (error) {
     console.error('Tugas Live page error:', error);
