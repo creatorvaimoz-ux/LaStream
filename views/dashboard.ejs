@@ -2959,6 +2959,115 @@
     document.addEventListener('DOMContentLoaded', function () {
       updateToggleDisplay('both');
 
+      const pgSaveBtn = document.getElementById('pgSaveBtn');
+      if (pgSaveBtn) {
+        pgSaveBtn.addEventListener('click', async function() {
+          const mode = document.getElementById('pgOutputType').value;
+          const videoSelect = document.getElementById('pgVideoSelect');
+          const selectedVideos = Array.from(videoSelect.selectedOptions).map(opt => opt.value);
+          
+          if (selectedVideos.length === 0) {
+            showToast('error', 'Pilih minimal 1 video terlebih dahulu');
+            return;
+          }
+          
+          const videoId = selectedVideos[0];
+          const csrfToken = document.querySelector('input[name="_csrf"]')?.value || window._csrfToken || '';
+          
+          const originalText = pgSaveBtn.innerHTML;
+          pgSaveBtn.innerHTML = '<i class="ti ti-loader animate-spin"></i> Menyimpan...';
+          pgSaveBtn.disabled = true;
+          
+          try {
+            const scheduleStart = document.getElementById('pgStartTime')?.value;
+            const scheduleEnd = document.getElementById('pgEndTime')?.value;
+            
+            let url = mode === 'youtube' ? '/api/streams/youtube' : '/api/streams';
+            let dataObj = {};
+            let isFormData = false;
+            let reqBody;
+            
+            if (mode === 'youtube') {
+              dataObj = {
+                videoId: videoId,
+                title: document.getElementById('pgYtTitle')?.value || document.getElementById('pgStreamTitle')?.value || 'Untitled Stream',
+                description: document.getElementById('pgYtDesc')?.value || '',
+                privacy: document.getElementById('pgPrivacy')?.value || 'public',
+                category: document.getElementById('pgCategory')?.value || '22',
+                tags: document.getElementById('pgTags')?.value || '',
+                loopVideo: document.getElementById('pgLoopVideo')?.checked || false,
+                ytChannelId: document.getElementById('pgChannel')?.value || '',
+                ytMonetization: document.getElementById('pgEnableAds')?.checked || false,
+                ytClosedCaptions: document.getElementById('pgAutoSubtitles')?.checked || false,
+                watermarkPath: document.getElementById('pgWatermarkPath')?.value || '',
+                watermarkPosition: document.getElementById('pgWatermarkPosition')?.value || 'top-right',
+                overlayText: document.getElementById('pgOverlayText')?.value || '',
+                overlayTextType: document.getElementById('pgOverlayTextType')?.value || 'static'
+              };
+              
+              const thumbnailInput = document.getElementById('pgThumbnailFile');
+              if (thumbnailInput && thumbnailInput.files.length > 0) {
+                isFormData = true;
+                const fd = new FormData();
+                Object.keys(dataObj).forEach(k => fd.append(k, dataObj[k]));
+                fd.append('thumbnail', thumbnailInput.files[0]);
+                if (scheduleStart) fd.append('scheduleStartTime', scheduleStart);
+                if (scheduleEnd) fd.append('scheduleEndTime', scheduleEnd);
+                reqBody = fd;
+              }
+            } else {
+              dataObj = {
+                streamTitle: document.getElementById('pgStreamTitle')?.value || 'Untitled Stream',
+                videoId: videoId,
+                rtmpUrl: document.getElementById('pgRtmpUrl')?.value || '',
+                streamKey: document.getElementById('pgStreamKey')?.value || '',
+                bitrate: '3000',
+                fps: '30',
+                loopVideo: document.getElementById('pgLoopVideo')?.checked || false,
+                orientation: 'horizontal',
+                resolution: '1080p',
+                useAdvancedSettings: false,
+                watermarkPath: document.getElementById('pgWatermarkPath')?.value || '',
+                watermarkPosition: document.getElementById('pgWatermarkPosition')?.value || 'top-right',
+                overlayText: document.getElementById('pgOverlayText')?.value || '',
+                overlayTextType: document.getElementById('pgOverlayTextType')?.value || 'static'
+              };
+            }
+            
+            if (!isFormData) {
+              if (scheduleStart) dataObj.scheduleStartTime = scheduleStart;
+              if (scheduleEnd) dataObj.scheduleEndTime = scheduleEnd;
+              reqBody = JSON.stringify(dataObj);
+            }
+            
+            const headers = isFormData ? {} : { 'Content-Type': 'application/json' };
+            if (csrfToken) headers['X-CSRF-Token'] = csrfToken;
+            
+            const res = await fetch(url, {
+              method: 'POST',
+              headers: headers,
+              body: reqBody
+            });
+            
+            const result = await res.json();
+            if (result.success) {
+              showToast('success', 'Stream berhasil dibuat!');
+              if (typeof pgLoadStreams === 'function') pgLoadStreams();
+              if (typeof refreshStreamsView === 'function') refreshStreamsView(1, '');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else {
+              showToast('error', result.error || 'Gagal membuat stream');
+            }
+          } catch (e) {
+            console.error(e);
+            showToast('error', 'Terjadi kesalahan sistem saat menyimpan');
+          } finally {
+            pgSaveBtn.innerHTML = originalText;
+            pgSaveBtn.disabled = false;
+          }
+        });
+      }
+
       const pgBtnUploadWatermark = document.getElementById('pgBtnUploadWatermark');
       if (pgBtnUploadWatermark) {
         pgBtnUploadWatermark.addEventListener('click', async function() {
