@@ -3046,8 +3046,22 @@
             const res = await fetch(url, {
               method: 'POST',
               headers: headers,
-              body: reqBody
+              body: reqBody,
+              credentials: 'same-origin'
             });
+            
+            if (!res.ok) {
+              const text = await res.text();
+              try {
+                const errJson = JSON.parse(text);
+                throw new Error(errJson.error || 'Server error: ' + res.status);
+              } catch(e) {
+                if (text.includes('login') || res.status === 401 || res.status === 403) {
+                  throw new Error('Sesi Anda mungkin telah berakhir atau invalid (Error ' + res.status + '). Silakan refresh halaman.');
+                }
+                throw new Error('Server mengembalikan error ' + res.status + ': ' + text.substring(0, 40));
+              }
+            }
             
             const result = await res.json();
             if (result.success) {
@@ -3060,7 +3074,7 @@
             }
           } catch (e) {
             console.error(e);
-            showToast('error', 'Terjadi kesalahan sistem saat menyimpan');
+            showToast('error', e.message || 'Terjadi kesalahan sistem saat menyimpan');
           } finally {
             pgSaveBtn.innerHTML = originalText;
             pgSaveBtn.disabled = false;
