@@ -3007,7 +3007,7 @@ app.post('/api/videos/import-drive', isAuthenticated, [
       console.error('Google Drive URL parsing error:', error);
       return res.status(400).json({
         success: false,
-        error: 'Invalid Google Drive URL format'
+        error: error.message || 'Format URL Google Drive tidak valid'
       });
     }
   } catch (error) {

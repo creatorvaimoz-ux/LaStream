@@ -4,10 +4,19 @@ const axios = require('axios');
 const { paths, getUniqueFilenameWithNumber } = require('./storage');
 
 function extractFileId(driveUrl) {
+  // Deteksi link FOLDER Google Drive — tidak bisa didownload langsung
+  if (driveUrl.includes('/drive/folders/') || driveUrl.includes('drive/folders')) {
+    throw new Error('URL yang dimasukkan adalah link FOLDER, bukan file video. Buka folder tersebut, klik kanan pada file video, lalu pilih "Bagikan" untuk mendapatkan link file individual.');
+  }
+
   let match = driveUrl.match(/\/file\/d\/([^\/]+)/);
   if (match) return match[1];
 
-  match = driveUrl.match(/\?id=([^&]+)/);
+  match = driveUrl.match(/[?&]id=([^&]+)/);
+  if (match) return match[1];
+
+  // Support format /open?id=
+  match = driveUrl.match(/\/open\?id=([^&]+)/);
   if (match) return match[1];
 
   match = driveUrl.match(/\/d\/([^\/]+)/);
@@ -17,7 +26,7 @@ function extractFileId(driveUrl) {
     return driveUrl.trim();
   }
 
-  throw new Error('Invalid Google Drive URL format');
+  throw new Error('Format URL Google Drive tidak valid. Gunakan link berbagi file, contoh: https://drive.google.com/file/d/FILE_ID/view');
 }
 
 async function getFileMetadata(fileId) {
