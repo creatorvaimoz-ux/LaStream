@@ -3753,12 +3753,6 @@ app.post('/api/streams/youtube', isAuthenticated, uploadThumbnail.single('thumbn
     const user = await User.findById(req.session.userId);
     const YoutubeChannel = require('./models/YoutubeChannel');
     
-    if (!process.env.YOUTUBE_CLIENT_ID || !process.env.YOUTUBE_CLIENT_SECRET) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'YouTube API credentials not configured in server .env.' 
-      });
-    }
     const { videoId, title, description, privacy, category, tags, loopVideo, scheduleStartTime, scheduleEndTime, repeat, ytChannelId, ytMonetization, ytClosedCaptions } = req.body;
     
     let selectedChannel;
