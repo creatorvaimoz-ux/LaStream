@@ -584,7 +584,7 @@
         function applyAI(type) { pgApplyAI(type); }
       </script>
 
-      <!-- NEW: Monetisasi & VOD After Life -->
+      <!-- NEW: Monetisasi -->
       <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         <div class="px-4 sm:px-5 py-3 border-b border-slate-100 flex items-center justify-between cursor-pointer"
           onclick="document.getElementById('pgMonetSection').classList.toggle('hidden'); this.querySelector('.monet-chevron').classList.toggle('rotate-180')">
@@ -592,125 +592,123 @@
             <div class="w-6 h-6 rounded-lg bg-green-100 flex items-center justify-center">
               <i class="ti ti-currency-dollar text-green-600 text-sm"></i>
             </div>
-            <h3 class="font-semibold text-slate-800 text-sm">Monetisasi & VOD</h3>
+            <h3 class="font-semibold text-slate-800 text-sm">Monetisasi Stream</h3>
           </div>
           <i class="ti ti-chevron-down text-slate-400 monet-chevron transition-transform duration-200"></i>
         </div>
         <div id="pgMonetSection" class="p-4 sm:p-5 space-y-4 hidden">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <label class="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 cursor-pointer hover:border-green-300 transition-colors">
+              <div class="flex items-center gap-2">
+                <i class="ti ti-ad-2 text-green-500 text-base"></i>
+                <div>
+                  <div class="text-xs font-medium text-slate-700">Iklan (Ads)</div>
+                  <div class="text-[10px] text-slate-400">Enable monetization ads</div>
+                </div>
+              </div>
+              <div class="relative">
+                <input type="checkbox" id="pgEnableAds" class="sr-only peer">
+                <div class="w-9 h-5 bg-slate-300 rounded-full peer peer-checked:bg-green-500"></div>
+                <div class="absolute left-[2px] top-[2px] w-4 h-4 bg-white rounded-full transition-all peer-checked:translate-x-4"></div>
+              </div>
+            </label>
+            <label class="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 cursor-pointer hover:border-blue-300 transition-colors">
+              <div class="flex items-center gap-2">
+                <i class="ti ti-heart text-red-500 text-base"></i>
+                <div>
+                  <div class="text-xs font-medium text-slate-700">Super Chat & Sticker</div>
+                  <div class="text-[10px] text-slate-400">Allow super chat donations</div>
+                </div>
+              </div>
+              <div class="relative">
+                <input type="checkbox" id="pgEnableSuperChat" checked class="sr-only peer">
+                <div class="w-9 h-5 bg-slate-300 rounded-full peer peer-checked:bg-red-500"></div>
+                <div class="absolute left-[2px] top-[2px] w-4 h-4 bg-white rounded-full transition-all peer-checked:translate-x-4"></div>
+              </div>
+            </label>
+            <label class="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 cursor-pointer hover:border-amber-300 transition-colors">
+              <div class="flex items-center gap-2">
+                <i class="ti ti-brand-youtube text-amber-500 text-base"></i>
+                <div>
+                  <div class="text-xs font-medium text-slate-700">Channel Membership</div>
+                  <div class="text-[10px] text-slate-400">Members-only perks</div>
+                </div>
+              </div>
+              <div class="relative">
+                <input type="checkbox" id="pgEnableMembership" class="sr-only peer">
+                <div class="w-9 h-5 bg-slate-300 rounded-full peer peer-checked:bg-amber-500"></div>
+                <div class="absolute left-[2px] top-[2px] w-4 h-4 bg-white rounded-full transition-all peer-checked:translate-x-4"></div>
+              </div>
+            </label>
+            <label class="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 cursor-pointer hover:border-purple-300 transition-colors">
+              <div class="flex items-center gap-2">
+                <i class="ti ti-shopping-cart text-purple-500 text-base"></i>
+                <div>
+                  <div class="text-xs font-medium text-slate-700">Shopping / Merch</div>
+                  <div class="text-[10px] text-slate-400">YouTube Shopping shelf</div>
+                </div>
+              </div>
+              <div class="relative">
+                <input type="checkbox" id="pgEnableShopping" class="sr-only peer">
+                <div class="w-9 h-5 bg-slate-300 rounded-full peer peer-checked:bg-purple-500"></div>
+                <div class="absolute left-[2px] top-[2px] w-4 h-4 bg-white rounded-full transition-all peer-checked:translate-x-4"></div>
+              </div>
+            </label>
+          </div>
+        </div>
+      </div>
 
-          <!-- Monetisasi -->
-          <div class="space-y-3">
-            <h4 class="text-xs font-semibold text-slate-700 uppercase tracking-wide">Monetisasi Stream</h4>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <label class="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 cursor-pointer hover:border-green-300 transition-colors">
-                <div class="flex items-center gap-2">
-                  <i class="ti ti-ad-2 text-green-500 text-base"></i>
-                  <div>
-                    <div class="text-xs font-medium text-slate-700">Iklan (Ads)</div>
-                    <div class="text-[10px] text-slate-400">Enable monetization ads</div>
-                  </div>
-                </div>
-                <div class="relative">
-                  <input type="checkbox" id="pgEnableAds" class="sr-only peer">
-                  <div class="w-9 h-5 bg-slate-300 rounded-full peer peer-checked:bg-green-500"></div>
-                  <div class="absolute left-[2px] top-[2px] w-4 h-4 bg-white rounded-full transition-all peer-checked:translate-x-4"></div>
-                </div>
-              </label>
-              <label class="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 cursor-pointer hover:border-blue-300 transition-colors">
-                <div class="flex items-center gap-2">
-                  <i class="ti ti-heart text-red-500 text-base"></i>
-                  <div>
-                    <div class="text-xs font-medium text-slate-700">Super Chat & Sticker</div>
-                    <div class="text-[10px] text-slate-400">Allow super chat donations</div>
-                  </div>
-                </div>
-                <div class="relative">
-                  <input type="checkbox" id="pgEnableSuperChat" checked class="sr-only peer">
-                  <div class="w-9 h-5 bg-slate-300 rounded-full peer peer-checked:bg-red-500"></div>
-                  <div class="absolute left-[2px] top-[2px] w-4 h-4 bg-white rounded-full transition-all peer-checked:translate-x-4"></div>
-                </div>
-              </label>
-              <label class="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 cursor-pointer hover:border-amber-300 transition-colors">
-                <div class="flex items-center gap-2">
-                  <i class="ti ti-brand-youtube text-amber-500 text-base"></i>
-                  <div>
-                    <div class="text-xs font-medium text-slate-700">Channel Membership</div>
-                    <div class="text-[10px] text-slate-400">Members-only perks</div>
-                  </div>
-                </div>
-                <div class="relative">
-                  <input type="checkbox" id="pgEnableMembership" class="sr-only peer">
-                  <div class="w-9 h-5 bg-slate-300 rounded-full peer peer-checked:bg-amber-500"></div>
-                  <div class="absolute left-[2px] top-[2px] w-4 h-4 bg-white rounded-full transition-all peer-checked:translate-x-4"></div>
-                </div>
-              </label>
-              <label class="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 cursor-pointer hover:border-purple-300 transition-colors">
-                <div class="flex items-center gap-2">
-                  <i class="ti ti-shopping-cart text-purple-500 text-base"></i>
-                  <div>
-                    <div class="text-xs font-medium text-slate-700">Shopping / Merch</div>
-                    <div class="text-[10px] text-slate-400">YouTube Shopping shelf</div>
-                  </div>
-                </div>
-                <div class="relative">
-                  <input type="checkbox" id="pgEnableShopping" class="sr-only peer">
-                  <div class="w-9 h-5 bg-slate-300 rounded-full peer peer-checked:bg-purple-500"></div>
-                  <div class="absolute left-[2px] top-[2px] w-4 h-4 bg-white rounded-full transition-all peer-checked:translate-x-4"></div>
-                </div>
-              </label>
+      <!-- NEW: VOD After Live -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="px-4 sm:px-5 py-3 border-b border-slate-100 flex items-center justify-between cursor-pointer"
+          onclick="document.getElementById('pgVodSection').classList.toggle('hidden'); this.querySelector('.vod-chevron').classList.toggle('rotate-180')">
+          <div class="flex items-center gap-2">
+            <div class="w-6 h-6 rounded-lg bg-sky-100 flex items-center justify-center">
+              <i class="ti ti-video-plus text-sky-600 text-sm"></i>
+            </div>
+            <h3 class="font-semibold text-slate-800 text-sm">VOD After Live <span class="text-[10px] bg-sky-100 text-sky-600 px-2 py-0.5 rounded-full font-medium ml-2">Setelah stream selesai</span></h3>
+          </div>
+          <i class="ti ti-chevron-down text-slate-400 vod-chevron transition-transform duration-200"></i>
+        </div>
+        <div id="pgVodSection" class="p-4 sm:p-5 space-y-4">
+          <p class="text-[11px] text-slate-400">Atur apa yang terjadi pada rekaman stream setelah live selesai.</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="text-xs text-slate-400 block mb-1">Visibilitas VOD</label>
+              <select id="pgVodPrivacy" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 text-sm focus:border-primary focus:ring-1 focus:ring-primary">
+                <option value="public">🌐 Public — Semua orang bisa lihat</option>
+                <option value="unlisted" selected>🔗 Unlisted — Hanya yang punya link</option>
+                <option value="private">🔒 Private — Hanya Anda</option>
+                <option value="delete">🗑️ Hapus otomatis</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-xs text-slate-400 block mb-1">Tunda Publish VOD</label>
+              <select id="pgVodDelay" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 text-sm focus:border-primary focus:ring-1 focus:ring-primary">
+                <option value="0">Langsung (segera setelah live)</option>
+                <option value="30">30 menit kemudian</option>
+                <option value="60">1 jam kemudian</option>
+                <option value="360">6 jam kemudian</option>
+                <option value="1440">24 jam kemudian</option>
+              </select>
             </div>
           </div>
-
-          <!-- Divider -->
-          <div class="border-t border-slate-100"></div>
-
-          <!-- VOD After Life -->
-          <div class="space-y-3">
-            <h4 class="text-xs font-semibold text-slate-700 uppercase tracking-wide flex items-center gap-1.5">
-              <i class="ti ti-video-plus text-sky-500"></i>
-              VOD After Live
-              <span class="text-[10px] bg-sky-100 text-sky-600 px-2 py-0.5 rounded-full font-medium">Setelah stream selesai</span>
-            </h4>
-            <p class="text-[11px] text-slate-400">Atur apa yang terjadi pada rekaman stream setelah live selesai.</p>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <label class="flex items-center gap-2 text-xs text-slate-500 cursor-pointer bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5">
+              <input type="checkbox" id="pgVodChapter" checked class="rounded border-slate-300 text-primary">
               <div>
-                <label class="text-xs text-slate-400 block mb-1">Visibilitas VOD</label>
-                <select id="pgVodPrivacy" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 text-sm focus:border-primary focus:ring-1 focus:ring-primary">
-                  <option value="public">🌐 Public — Semua orang bisa lihat</option>
-                  <option value="unlisted" selected>🔗 Unlisted — Hanya yang punya link</option>
-                  <option value="private">🔒 Private — Hanya Anda</option>
-                  <option value="delete">🗑️ Hapus otomatis</option>
-                </select>
+                <div class="font-medium text-slate-700">Auto Chapter</div>
+                <div class="text-[10px] text-slate-400">Bagi VOD ke chapter otomatis</div>
               </div>
+            </label>
+            <label class="flex items-center gap-2 text-xs text-slate-500 cursor-pointer bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5">
+              <input type="checkbox" id="pgVodHighlight" class="rounded border-slate-300 text-primary">
               <div>
-                <label class="text-xs text-slate-400 block mb-1">Tunda Publish VOD</label>
-                <select id="pgVodDelay" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 text-sm focus:border-primary focus:ring-1 focus:ring-primary">
-                  <option value="0">Langsung (segera setelah live)</option>
-                  <option value="30">30 menit kemudian</option>
-                  <option value="60">1 jam kemudian</option>
-                  <option value="360">6 jam kemudian</option>
-                  <option value="1440">24 jam kemudian</option>
-                </select>
+                <div class="font-medium text-slate-700">Auto Highlight Clip</div>
+                <div class="text-[10px] text-slate-400">Buat clip highlight otomatis</div>
               </div>
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <label class="flex items-center gap-2 text-xs text-slate-500 cursor-pointer bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5">
-                <input type="checkbox" id="pgVodChapter" checked class="rounded border-slate-300 text-primary">
-                <div>
-                  <div class="font-medium text-slate-700">Auto Chapter</div>
-                  <div class="text-[10px] text-slate-400">Bagi VOD ke chapter otomatis</div>
-                </div>
-              </label>
-              <label class="flex items-center gap-2 text-xs text-slate-500 cursor-pointer bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5">
-                <input type="checkbox" id="pgVodHighlight" class="rounded border-slate-300 text-primary">
-                <div>
-                  <div class="font-medium text-slate-700">Auto Highlight Clip</div>
-                  <div class="text-[10px] text-slate-400">Buat clip highlight otomatis</div>
-                </div>
-              </label>
-            </div>
+            </label>
           </div>
-
         </div>
       </div>
 
@@ -1237,7 +1235,18 @@
           <script>
             document.getElementById('pgThumbnailFile').addEventListener('change', function(e) {
               const preview = document.getElementById('pgThumbPreview');
+              const select = document.getElementById('pgThumbnailSelect');
               if (this.files && this.files.length > 0) {
+                // Populate select box for randomization selection
+                select.innerHTML = '';
+                Array.from(this.files).forEach((file, index) => {
+                  const option = document.createElement('option');
+                  option.value = index;
+                  option.text = file.name;
+                  option.selected = true; // Select all by default
+                  select.appendChild(option);
+                });
+
                 if (this.files.length === 1) {
                   const file = this.files[0];
                   const reader = new FileReader();
@@ -1249,6 +1258,7 @@
                   preview.innerHTML = `<i class="ti ti-files text-4xl text-primary mb-2"></i><p class="text-sm font-medium text-slate-700">${this.files.length} File terpilih</p><p class="text-[10px] text-slate-500 mt-1">Siap untuk diacak</p>`;
                 }
               } else {
+                select.innerHTML = ''; // Clear select box
                 preview.innerHTML = `
                   <i class="ti ti-photo-up text-3xl text-slate-500 mb-2"></i>
                   <p class="text-xs text-slate-400">Upload Thumbnail Box (Bisa pilih banyak)</p>
@@ -1257,8 +1267,8 @@
               }
             });
           </script>
-          <label class="flex items-center gap-2 text-xs text-slate-400 cursor-pointer">
-            <input type="checkbox" checked class="rounded border-slate-300 bg-white text-primary focus:ring-primary">
+          <label class="flex items-center gap-2 text-xs text-slate-400 cursor-pointer mt-3">
+            <input type="checkbox" id="pgUseThumbnail" checked class="rounded border-slate-300 bg-white text-primary focus:ring-primary">
             Gunakan Thumbnail disamping
           </label>
         </div>
@@ -3005,12 +3015,25 @@
                 overlayTextType: document.getElementById('pgOverlayTextType')?.value || 'static'
               };
               
+              const useThumbnail = document.getElementById('pgUseThumbnail')?.checked;
               const thumbnailInput = document.getElementById('pgThumbnailFile');
-              if (thumbnailInput && thumbnailInput.files.length > 0) {
+              const thumbnailSelect = document.getElementById('pgThumbnailSelect');
+              
+              if (useThumbnail && thumbnailInput && thumbnailInput.files.length > 0) {
                 isFormData = true;
                 const fd = new FormData();
                 Object.keys(dataObj).forEach(k => fd.append(k, dataObj[k]));
-                fd.append('thumbnail', thumbnailInput.files[0]);
+                
+                // Randomization logic for thumbnails
+                const selectedIndices = Array.from(thumbnailSelect?.selectedOptions || []).map(opt => parseInt(opt.value));
+                if (selectedIndices.length > 0) {
+                  const randomIndex = selectedIndices[Math.floor(Math.random() * selectedIndices.length)];
+                  fd.append('thumbnail', thumbnailInput.files[randomIndex]);
+                } else {
+                  const randomIndex = Math.floor(Math.random() * thumbnailInput.files.length);
+                  fd.append('thumbnail', thumbnailInput.files[randomIndex]);
+                }
+                
                 if (scheduleStart) fd.append('scheduleStartTime', scheduleStart);
                 if (scheduleEnd) fd.append('scheduleEndTime', scheduleEnd);
                 reqBody = fd;
