@@ -7,6 +7,7 @@
   ![YouTube API](https://img.shields.io/badge/YouTube-API%20v3-FF0000?logo=youtube&logoColor=white)
   ![License](https://img.shields.io/badge/License-MIT-blue)
   ![Made by](https://img.shields.io/badge/Made%20by-Vaimoz-purple)
+  ![Last Updated](https://img.shields.io/badge/Last%20Updated-12%20May%202026-orange)
 </div>
 
 ---

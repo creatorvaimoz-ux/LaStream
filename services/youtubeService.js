@@ -314,9 +314,48 @@ async function deleteYouTubeBroadcast(streamId) {
   }
 }
 
+async function getLiveViewerCount(broadcastId, userId, channelId) {
+  try {
+    const User = require('../models/User');
+    const YoutubeChannel = require('../models/YoutubeChannel');
+    const { decrypt } = require('../utils/encryption');
+    
+    const user = await User.findById(userId);
+    const selectedChannel = await YoutubeChannel.findById(channelId);
+    if (!user || !selectedChannel) return 0;
+
+    const clientSecret = decrypt(user.youtube_client_secret);
+    const accessToken = decrypt(selectedChannel.access_token);
+    const refreshToken = decrypt(selectedChannel.refresh_token);
+    
+    if (!user.youtube_client_id || !clientSecret || !accessToken) return 0;
+
+    const oauth2Client = getYouTubeOAuth2Client(user.youtube_client_id, clientSecret, '');
+    oauth2Client.setCredentials({
+      access_token: accessToken,
+      refresh_token: refreshToken
+    });
+
+    const youtube = google.youtube({ version: 'v3', auth: oauth2Client });
+    const response = await youtube.videos.list({
+      part: 'liveStreamingDetails',
+      id: broadcastId
+    });
+
+    const item = response.data.items?.[0];
+    if (!item || !item.liveStreamingDetails) return 0;
+
+    return parseInt(item.liveStreamingDetails.concurrentViewers || 0);
+  } catch (error) {
+    console.error(`[YouTubeService] Error fetching viewer count for ${broadcastId}:`, error.message);
+    return 0;
+  }
+}
+
 module.exports = {
   createYouTubeBroadcast,
   deleteYouTubeBroadcast,
   getYouTubeOAuth2Client,
-  syncBroadcastMonetization
+  syncBroadcastMonetization,
+  getLiveViewerCount
 };

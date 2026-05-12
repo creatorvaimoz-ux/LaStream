@@ -2426,7 +2426,43 @@
                 </div>
               </div>
             </div>
-
+            
+            <!-- Smart Stop -->
+            <div class="bg-slate-50 rounded-lg p-4 border border-slate-200 space-y-3 mt-6">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <i class="ti ti-users text-cyan-400"></i>
+                  <div>
+                    <span class="text-xs font-medium text-slate-800">Smart Stop (Tunda jika ada penonton)</span>
+                    <p class="text-[10px] text-slate-500 mt-0.5">Menunda penghentian stream jika jumlah penonton melebihi batas tertentu</p>
+                  </div>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
+                  <input type="checkbox" id="pgEditSmartStop" class="sr-only peer">
+                  <div class="w-9 h-5 bg-slate-300 rounded-full peer peer-checked:bg-cyan-500"></div>
+                  <div class="absolute left-[2px] top-[2px] w-4 h-4 bg-white rounded-full transition-all peer-checked:translate-x-4"></div>
+                </label>
+              </div>
+              <div id="pgEditSmartStopOptions" class="hidden grid grid-cols-2 gap-3">
+                <div>
+                  <label class="text-[10px] text-slate-500 block mb-1">Tunda stop jika penonton ></label>
+                  <div class="relative">
+                    <input type="number" id="pgEditViewerThreshold" value="5" min="1" class="w-full px-2 py-1.5 pr-16 bg-white border border-slate-300 rounded-lg text-slate-800 text-xs focus:border-primary">
+                    <span class="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-500">penonton</span>
+                  </div>
+                </div>
+                <div>
+                  <label class="text-[10px] text-slate-500 block mb-1">Maksimal tunda</label>
+                  <select id="pgEditSmartStopMax" class="w-full px-2 py-1.5 bg-white border border-slate-300 rounded-lg text-slate-800 text-xs focus:border-primary">
+                    <option value="15">15 menit</option>
+                    <option value="30" selected>30 menit</option>
+                    <option value="60">1 jam</option>
+                    <option value="120">2 jam</option>
+                    <option value="0">Tanpa batas</option>
+                  </select>
+                </div>
+              </div>
+            </div>
           </form>
         </div>
         <div class="flex-shrink-0 flex items-center justify-end gap-3 p-4 sm:px-6 sm:py-4 border-t border-slate-200">
@@ -3002,7 +3038,10 @@
                 watermarkPath: document.getElementById('pgWatermarkPath')?.value || '',
                 watermarkPosition: document.getElementById('pgWatermarkPosition')?.value || 'top-right',
                 overlayText: document.getElementById('pgOverlayText')?.value || '',
-                overlayTextType: document.getElementById('pgOverlayTextType')?.value || 'static'
+                overlayTextType: document.getElementById('pgOverlayTextType')?.value || 'static',
+                smartStop: document.getElementById('pgSmartStop')?.checked || false,
+                viewerThreshold: document.getElementById('pgViewerThreshold')?.value || 5,
+                smartStopMax: document.getElementById('pgSmartStopMax')?.value || 30
               };
               
               const useThumbnail = document.getElementById('pgUseThumbnail')?.checked;
@@ -3043,7 +3082,10 @@
                 watermarkPath: document.getElementById('pgWatermarkPath')?.value || '',
                 watermarkPosition: document.getElementById('pgWatermarkPosition')?.value || 'top-right',
                 overlayText: document.getElementById('pgOverlayText')?.value || '',
-                overlayTextType: document.getElementById('pgOverlayTextType')?.value || 'static'
+                overlayTextType: document.getElementById('pgOverlayTextType')?.value || 'static',
+                smartStop: document.getElementById('pgSmartStop')?.checked || false,
+                viewerThreshold: document.getElementById('pgViewerThreshold')?.value || 5,
+                smartStopMax: document.getElementById('pgSmartStopMax')?.value || 30
               };
             }
             
@@ -3130,6 +3172,23 @@
             pgBtnUploadWatermark.innerHTML = originalText;
             pgBtnUploadWatermark.disabled = false;
           }
+        });
+      }
+      const pgEditSmartStop = document.getElementById('pgEditSmartStop');
+      const pgEditSmartStopOptions = document.getElementById('pgEditSmartStopOptions');
+      if (pgEditSmartStop && pgEditSmartStopOptions) {
+        pgEditSmartStop.addEventListener('change', function() {
+          if (this.checked) pgEditSmartStopOptions.classList.remove('hidden');
+          else pgEditSmartStopOptions.classList.add('hidden');
+        });
+      }
+      
+      const pgSmartStop = document.getElementById('pgSmartStop');
+      const pgSmartStopOptions = document.getElementById('pgSmartStopOptions');
+      if (pgSmartStop && pgSmartStopOptions) {
+        pgSmartStop.addEventListener('change', function() {
+          if (this.checked) pgSmartStopOptions.classList.remove('hidden');
+          else pgSmartStopOptions.classList.add('hidden');
         });
       }
     });
@@ -4898,12 +4957,24 @@
       const advancedSettingsContent = document.getElementById('editAdvancedSettingsContent');
       const advancedSettingsCheckbox = document.getElementById('editAdvancedSettingsCheckbox');
       if (stream.use_advanced_settings) {
-        advancedSettingsContent.classList.remove('hidden');
-        advancedSettingsCheckbox.checked = true;
-      } else {
-        advancedSettingsContent.classList.add('hidden');
         advancedSettingsCheckbox.checked = false;
       }
+
+      // Smart Stop fields
+      const editSmartStop = document.getElementById('pgEditSmartStop');
+      const editViewerThreshold = document.getElementById('pgEditViewerThreshold');
+      const editSmartStopMax = document.getElementById('pgEditSmartStopMax');
+      const editSmartStopOptions = document.getElementById('pgEditSmartStopOptions');
+
+      if (editSmartStop) {
+        editSmartStop.checked = stream.smart_stop === true || stream.smart_stop === 1;
+        if (editSmartStopOptions) {
+          if (editSmartStop.checked) editSmartStopOptions.classList.remove('hidden');
+          else editSmartStopOptions.classList.add('hidden');
+        }
+      }
+      if (editViewerThreshold) editViewerThreshold.value = stream.viewer_threshold || 5;
+      if (editSmartStopMax) editSmartStopMax.value = stream.smart_stop_max || 30;
       const modal = document.getElementById('editStreamModal');
       document.body.style.overflow = 'hidden';
       modal.classList.remove('hidden');
@@ -5230,7 +5301,10 @@
               category: document.getElementById('editYtCategory').value,
               tags: document.getElementById('editYtTags').value,
               loopVideo: true,
-              ytChannelId: document.getElementById('editYtSelectedChannelId')?.value || ''
+              ytChannelId: document.getElementById('editYtSelectedChannelId')?.value || '',
+              smartStop: document.getElementById('pgEditSmartStop')?.checked || false,
+              viewerThreshold: document.getElementById('pgEditViewerThreshold')?.value || 5,
+              smartStopMax: document.getElementById('pgEditSmartStopMax')?.value || 30
             };
 
             ytFormDataObj.ytMonetization = document.getElementById('editYtEnableMonetization').checked;
@@ -5328,7 +5402,10 @@
             loopVideo: document.getElementById('editLoopVideo').checked,
             orientation: currentEditOrientation,
             resolution: document.getElementById('editCurrentResolution').textContent,
-            useAdvancedSettings: !document.getElementById('editAdvancedSettingsContent').classList.contains('hidden')
+            useAdvancedSettings: !document.getElementById('editAdvancedSettingsContent').classList.contains('hidden'),
+            smartStop: document.getElementById('pgEditSmartStop')?.checked || false,
+            viewerThreshold: document.getElementById('pgEditViewerThreshold')?.value || 5,
+            smartStopMax: document.getElementById('pgEditSmartStopMax')?.value || 30
           };
           const scheduleStartTime = document.getElementById('editScheduleStartTime').value;
           const scheduleEndTime = document.getElementById('editScheduleEndTime').value;

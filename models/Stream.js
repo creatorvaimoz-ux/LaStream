@@ -35,13 +35,17 @@ class Stream {
       watermark_path = null,
       watermark_position = 'top-right',
       overlay_text = null,
-      overlay_text_type = 'static'
+      overlay_text_type = 'static',
+      smart_stop = false,
+      viewer_threshold = 5,
+      smart_stop_max = 30
     } = streamData;
     const loop_video_int = loop_video ? 1 : 0;
     const use_advanced_settings_int = use_advanced_settings ? 1 : 0;
     const is_youtube_api_int = is_youtube_api ? 1 : 0;
     const youtube_monetization_int = youtube_monetization ? 1 : 0;
     const youtube_closed_captions_int = youtube_closed_captions ? 1 : 0;
+    const smart_stop_int = smart_stop ? 1 : 0;
     const final_status = status || (schedule_time ? 'scheduled' : 'offline');
     const status_updated_at = new Date().toISOString();
     return new Promise((resolve, reject) => {
@@ -50,13 +54,15 @@ class Stream {
           id, title, video_id, rtmp_url, stream_key, platform, platform_icon,
           bitrate, resolution, fps, orientation, loop_video,
           schedule_time, end_time, duration, status, status_updated_at, use_advanced_settings, user_id,
-          youtube_broadcast_id, youtube_stream_id, youtube_description, youtube_privacy, youtube_category, youtube_tags, youtube_thumbnail, youtube_channel_id, is_youtube_api, youtube_monetization, youtube_closed_captions, watermark_path, watermark_position, overlay_text, overlay_text_type
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          youtube_broadcast_id, youtube_stream_id, youtube_description, youtube_privacy, youtube_category, youtube_tags, youtube_thumbnail, youtube_channel_id, is_youtube_api, youtube_monetization, youtube_closed_captions, watermark_path, watermark_position, overlay_text, overlay_text_type,
+          smart_stop, viewer_threshold, smart_stop_max
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           id, title, video_id, rtmp_url, stream_key, platform, platform_icon,
           bitrate, resolution, fps, orientation, loop_video_int,
           schedule_time, end_time, duration, final_status, status_updated_at, use_advanced_settings_int, user_id,
-          youtube_broadcast_id, youtube_stream_id, youtube_description, youtube_privacy, youtube_category, youtube_tags, youtube_thumbnail, youtube_channel_id, is_youtube_api_int, youtube_monetization_int, youtube_closed_captions_int, watermark_path, watermark_position, overlay_text, overlay_text_type
+          youtube_broadcast_id, youtube_stream_id, youtube_description, youtube_privacy, youtube_category, youtube_tags, youtube_thumbnail, youtube_channel_id, is_youtube_api_int, youtube_monetization_int, youtube_closed_captions_int, watermark_path, watermark_position, overlay_text, overlay_text_type,
+          smart_stop_int, viewer_threshold, smart_stop_max
         ],
         function (err) {
           if (err) {
@@ -81,6 +87,7 @@ class Stream {
           row.is_youtube_api = row.is_youtube_api === 1;
           row.youtube_monetization = row.youtube_monetization === 1;
           row.youtube_closed_captions = row.youtube_closed_captions === 1;
+          row.smart_stop = row.smart_stop === 1;
         }
         resolve(row);
       });
@@ -153,6 +160,7 @@ class Stream {
             row.is_youtube_api = row.is_youtube_api === 1;
             row.youtube_monetization = row.youtube_monetization === 1;
             row.youtube_closed_captions = row.youtube_closed_captions === 1;
+            row.smart_stop = row.smart_stop === 1;
           });
         }
         resolve(rows || []);
@@ -240,6 +248,7 @@ class Stream {
               row.is_youtube_api = row.is_youtube_api === 1;
               row.youtube_monetization = row.youtube_monetization === 1;
               row.youtube_closed_captions = row.youtube_closed_captions === 1;
+              row.smart_stop = row.smart_stop === 1;
             });
           }
           resolve({
@@ -266,6 +275,9 @@ class Stream {
         fields.push(`${key} = ?`);
         values.push(value ? 1 : 0);
       } else if (key === 'youtube_closed_captions' && typeof value === 'boolean') {
+        fields.push(`${key} = ?`);
+        values.push(value ? 1 : 0);
+      } else if (key === 'smart_stop' && typeof value === 'boolean') {
         fields.push(`${key} = ?`);
         values.push(value ? 1 : 0);
       } else {
@@ -439,6 +451,7 @@ class Stream {
             row.is_youtube_api = row.is_youtube_api === 1;
             row.youtube_monetization = row.youtube_monetization === 1;
             row.youtube_closed_captions = row.youtube_closed_captions === 1;
+            row.smart_stop = row.smart_stop === 1;
           }
           resolve(row);
         }
@@ -475,6 +488,7 @@ class Stream {
             row.is_youtube_api = row.is_youtube_api === 1;
             row.youtube_monetization = row.youtube_monetization === 1;
             row.youtube_closed_captions = row.youtube_closed_captions === 1;
+            row.smart_stop = row.smart_stop === 1;
           });
         }
         resolve(rows || []);
@@ -513,7 +527,7 @@ class Stream {
           `INSERT INTO streams (id, title, video_id, rtmp_url, stream_key, platform, platform_icon, bitrate, resolution, fps,
             orientation, loop_video, schedule_time, end_time, duration, status, status_updated_at, use_advanced_settings,
             user_id, youtube_description, youtube_privacy, youtube_category, youtube_tags, youtube_channel_id,
-            is_youtube_api, youtube_monetization, youtube_closed_captions, notes, created_at, updated_at)
+            is_youtube_api, youtube_monetization, youtube_closed_captions, smart_stop, viewer_threshold, smart_stop_max, notes, created_at, updated_at)
            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,NULL,NULL,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
           [
             newId,
@@ -523,7 +537,7 @@ class Stream {
             row.duration, 'offline', now, row.use_advanced_settings, row.user_id,
             row.youtube_description, row.youtube_privacy, row.youtube_category, row.youtube_tags,
             row.youtube_channel_id, row.is_youtube_api, row.youtube_monetization,
-            row.youtube_closed_captions, row.notes, now, now
+            row.youtube_closed_captions, row.smart_stop, row.viewer_threshold, row.smart_stop_max, row.notes, now, now
           ],
           function(err) {
             if (err) {

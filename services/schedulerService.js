@@ -74,14 +74,17 @@ async function checkStreamDurations() {
       const timeUntilEnd = endTime.getTime() - now.getTime();
 
       if (timeUntilEnd <= 0) {
+        console.log(`[Scheduler] Stream ${stream.id} reached end time. Stopping now.`);
         scheduledTerminations.delete(stream.id);
 
         try {
           await streamingService.stopStream(stream.id);
         } catch (e) {
+          console.error(`[Scheduler] Failed to stop stream ${stream.id} via streamingService:`, e);
           await Stream.updateStatus(stream.id, 'offline', stream.user_id);
         }
       } else if (timeUntilEnd <= 60000 && !scheduledTerminations.has(stream.id)) {
+        console.log(`[Scheduler] Stream ${stream.id} ending in < 1 minute (${Math.round(timeUntilEnd/1000)}s). Scheduling termination.`);
         scheduleStreamTermination(stream.id, timeUntilEnd / 60000, stream.user_id);
       }
     }
@@ -129,6 +132,22 @@ function scheduleStreamTermination(streamId, durationMinutes, userId = null) {
     targetEndTime,
     userId
   });
+}
+
+function scheduleStreamTerminationByEndTime(streamId, endTimeIso, userId = null) {
+  if (!endTimeIso) return;
+  
+  const endTime = new Date(endTimeIso);
+  const now = new Date();
+  const durationMs = endTime.getTime() - now.getTime();
+  
+  if (durationMs > 0) {
+    const durationMinutes = durationMs / 60000;
+    scheduleStreamTermination(streamId, durationMinutes, userId);
+  } else {
+    // Already past end time, trigger check immediately
+    checkStreamDurations();
+  }
 }
 
 function cancelStreamTermination(streamId) {
@@ -182,5 +201,6 @@ module.exports = {
   handleStreamStopped,
   checkScheduledStreams,
   checkStreamDurations,
+  scheduleStreamTerminationByEndTime,
   shutdown
 };

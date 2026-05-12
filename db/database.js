@@ -448,6 +448,17 @@ function createTables() {
             console.error('Error adding title_alternatives column to rotation_items:', err.message);
           }
         });
+
+        // Add Smart Stop columns to streams
+        db.run(`ALTER TABLE streams ADD COLUMN smart_stop INTEGER DEFAULT 0`, (err) => {
+          if (err && !err.message.includes('duplicate column name')) console.error(err.message);
+        });
+        db.run(`ALTER TABLE streams ADD COLUMN viewer_threshold INTEGER DEFAULT 5`, (err) => {
+          if (err && !err.message.includes('duplicate column name')) console.error(err.message);
+        });
+        db.run(`ALTER TABLE streams ADD COLUMN smart_stop_max INTEGER DEFAULT 30`, (err) => {
+          if (err && !err.message.includes('duplicate column name')) console.error(err.message);
+        });
         
         resolve();
       });

@@ -3700,6 +3700,9 @@ app.post('/api/streams', isAuthenticated, [
       orientation: req.body.orientation || 'horizontal',
       loop_video: req.body.loopVideo === 'true' || req.body.loopVideo === true,
       use_advanced_settings: req.body.useAdvancedSettings === 'true' || req.body.useAdvancedSettings === true,
+      smart_stop: req.body.smartStop === 'true' || req.body.smartStop === true,
+      viewer_threshold: parseInt(req.body.viewerThreshold) || 5,
+      smart_stop_max: parseInt(req.body.smartStopMax) || 30,
       user_id: req.session.userId
     };
     const serverTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -3753,7 +3756,7 @@ app.post('/api/streams/youtube', isAuthenticated, uploadThumbnail.single('thumbn
     const user = await User.findById(req.session.userId);
     const YoutubeChannel = require('./models/YoutubeChannel');
     
-    const { videoId, title, description, privacy, category, tags, loopVideo, scheduleStartTime, scheduleEndTime, repeat, ytChannelId, ytMonetization, ytClosedCaptions } = req.body;
+    const { videoId, title, description, privacy, category, tags, loopVideo, scheduleStartTime, scheduleEndTime, repeat, ytChannelId, ytMonetization, ytClosedCaptions, smartStop, viewerThreshold, smartStopMax } = req.body;
     
     let selectedChannel;
     if (ytChannelId) {
@@ -3820,7 +3823,10 @@ app.post('/api/streams/youtube', isAuthenticated, uploadThumbnail.single('thumbn
       youtube_channel_id: selectedChannel.id,
       is_youtube_api: true,
       youtube_monetization: ytMonetization === 'true' || ytMonetization === true,
-      youtube_closed_captions: ytClosedCaptions === 'true' || ytClosedCaptions === true
+      youtube_closed_captions: ytClosedCaptions === 'true' || ytClosedCaptions === true,
+      smart_stop: smartStop === 'true' || smartStop === true,
+      viewer_threshold: parseInt(viewerThreshold) || 5,
+      smart_stop_max: parseInt(smartStopMax) || 30
     };
     
     if (scheduleStartTime) {
@@ -3942,6 +3948,15 @@ app.put('/api/streams/:id', isAuthenticated, uploadThumbnail.single('thumbnail')
       }
       if (req.body.ytClosedCaptions !== undefined) {
         updateData.youtube_closed_captions = req.body.ytClosedCaptions === 'true' || req.body.ytClosedCaptions === true;
+      }
+      if (req.body.smartStop !== undefined) {
+        updateData.smart_stop = req.body.smartStop === 'true' || req.body.smartStop === true;
+      }
+      if (req.body.viewerThreshold !== undefined) {
+        updateData.viewer_threshold = parseInt(req.body.viewerThreshold);
+      }
+      if (req.body.smartStopMax !== undefined) {
+        updateData.smart_stop_max = parseInt(req.body.smartStopMax);
       }
       
       if (req.body.scheduleStartTime) {
@@ -4142,6 +4157,15 @@ app.put('/api/streams/:id', isAuthenticated, uploadThumbnail.single('thumbnail')
     }
     if (req.body.useAdvancedSettings !== undefined) {
       updateData.use_advanced_settings = req.body.useAdvancedSettings === 'true' || req.body.useAdvancedSettings === true;
+    }
+    if (req.body.smartStop !== undefined) {
+      updateData.smart_stop = req.body.smartStop === 'true' || req.body.smartStop === true;
+    }
+    if (req.body.viewerThreshold !== undefined) {
+      updateData.viewer_threshold = parseInt(req.body.viewerThreshold);
+    }
+    if (req.body.smartStopMax !== undefined) {
+      updateData.smart_stop_max = parseInt(req.body.smartStopMax);
     }
     const serverTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     

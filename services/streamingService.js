@@ -9,6 +9,7 @@ const Stream = require('../models/Stream');
 const Playlist = require('../models/Playlist');
 const Video = require('../models/Video');
 const TelegramService = require('./telegramService');
+const youtubeService = require('./youtubeService');
 
 let ffmpegPath;
 if (fs.existsSync('/usr/bin/ffmpeg')) {
@@ -38,6 +39,7 @@ const streamLogs = new Map();
 const streamRetryCount = new Map();
 const manuallyStoppingStreams = new Set();
 const startingStreams = new Set();
+const zeroViewerStartTime = new Map();
 
 const MAX_LOG_LINES = 50;
 const MAX_RETRY_ATTEMPTS = 15;
@@ -84,6 +86,7 @@ function cleanupStreamData(streamId) {
   streamRetryCount.delete(streamId);
   manuallyStoppingStreams.delete(streamId);
   startingStreams.delete(streamId);
+  zeroViewerStartTime.delete(streamId);
 }
 
 function getRetryDelay(retryCount) {
@@ -1205,6 +1208,44 @@ async function healthCheckStreams() {
     const staleThreshold = 5 * 60 * 1000;
 
     for (const [streamId, streamData] of activeStreams) {
+      const stream = await Stream.findById(streamId);
+      if (!stream) continue;
+
+      // Smart Stop Logic
+      if (stream.status === 'live' && stream.smart_stop) {
+        let viewerCount = null;
+
+        if (stream.is_youtube_api && stream.youtube_broadcast_id) {
+          viewerCount = await youtubeService.getLiveViewerCount(
+            stream.youtube_broadcast_id,
+            stream.user_id,
+            stream.youtube_channel_id
+          );
+        }
+
+        if (viewerCount !== null) {
+          const threshold = stream.viewer_threshold || 0;
+          if (viewerCount <= threshold) {
+            if (!zeroViewerStartTime.has(streamId)) {
+              zeroViewerStartTime.set(streamId, now);
+              addStreamLog(streamId, `Viewer count (${viewerCount}) is at or below threshold (${threshold}). Smart Stop timer started.`);
+            } else {
+              const inactiveDuration = now - zeroViewerStartTime.get(streamId);
+              const maxDelay = (stream.smart_stop_max || 10) * 60 * 1000;
+              
+              if (inactiveDuration >= maxDelay) {
+                addStreamLog(streamId, `Smart Stop triggered: Viewer count remained below threshold for ${stream.smart_stop_max} minutes. Stopping stream.`);
+                await stopStream(streamId);
+                continue;
+              }
+            }
+          } else if (zeroViewerStartTime.has(streamId)) {
+            addStreamLog(streamId, `Viewer count (${viewerCount}) recovered above threshold. Smart Stop timer reset.`);
+            zeroViewerStartTime.delete(streamId);
+          }
+        }
+      }
+
       if (streamData.process && streamData.process.exitCode !== null) {
         activeStreams.delete(streamId);
         const stream = await Stream.findById(streamId);
