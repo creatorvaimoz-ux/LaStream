@@ -900,6 +900,14 @@ async function startStream(streamId, isRetry = false, baseUrl = null) {
 
       if (isManualStop) {
         manuallyStoppingStreams.delete(streamId);
+        // Jika ada repeat_mode, reschedule meskipun dihentikan manual
+        try {
+          const stoppedStream = await Stream.findById(streamId);
+          if (stoppedStream && stoppedStream.repeat_mode && stoppedStream.repeat_mode !== 'none') {
+            await Stream.updateStatus(streamId, 'offline', stoppedStream.user_id);
+            await Stream.rescheduleIfRepeating(streamId);
+          }
+        } catch (e) { }
         cleanupStreamData(streamId);
         return;
       }
@@ -921,6 +929,11 @@ async function startStream(streamId, isRetry = false, baseUrl = null) {
           if (wasActive) {
             try {
               await Stream.updateStatus(streamId, 'offline', currentStream.user_id);
+              // Reschedule jika ada repeat_mode
+              const rescheduled = await Stream.rescheduleIfRepeating(streamId);
+              if (rescheduled) {
+                addStreamLog(streamId, `[Scheduler] Stream dijadwalkan ulang (${currentStream.repeat_mode})`);
+              }
               if (schedulerService) {
                 schedulerService.handleStreamStopped(streamId);
               }
@@ -983,6 +996,11 @@ async function startStream(streamId, isRetry = false, baseUrl = null) {
       if (wasActive && currentStream) {
         try {
           await Stream.updateStatus(streamId, 'offline', currentStream.user_id);
+          // Reschedule jika ada repeat_mode
+          const rescheduled = await Stream.rescheduleIfRepeating(streamId);
+          if (rescheduled) {
+            addStreamLog(streamId, `[Scheduler] Stream dijadwalkan ulang (${currentStream.repeat_mode})`);
+          }
           if (schedulerService) {
             schedulerService.handleStreamStopped(streamId);
           }
@@ -1054,6 +1072,8 @@ async function stopStream(streamId) {
     if (!streamData) {
       if (stream && stream.status === 'live') {
         await Stream.updateStatus(streamId, 'offline', stream.user_id);
+        // Reschedule jika ada repeat_mode
+        await Stream.rescheduleIfRepeating(streamId);
         if (schedulerService) {
           schedulerService.handleStreamStopped(streamId);
         }
@@ -1081,6 +1101,12 @@ async function stopStream(streamId) {
 
       await saveStreamHistory(stream);
       await Stream.updateStatus(streamId, 'offline', stream.user_id);
+      // Reschedule jika ada repeat_mode (harian/mingguan)
+      const rescheduled = await Stream.rescheduleIfRepeating(streamId);
+      if (rescheduled) {
+        addStreamLog(streamId, `[Scheduler] Stream dijadwalkan ulang (${stream.repeat_mode})`);
+        console.log(`[Scheduler] Stream ${streamId} dijadwalkan ulang (${stream.repeat_mode})`);
+      }
     }
 
     if (schedulerService) {

@@ -459,6 +459,11 @@ function createTables() {
         db.run(`ALTER TABLE streams ADD COLUMN smart_stop_max INTEGER DEFAULT 30`, (err) => {
           if (err && !err.message.includes('duplicate column name')) console.error(err.message);
         });
+
+        // Add repeat_mode column to streams for daily/weekly repeat scheduling
+        db.run(`ALTER TABLE streams ADD COLUMN repeat_mode TEXT DEFAULT 'none'`, (err) => {
+          if (err && !err.message.includes('duplicate column name')) console.error(err.message);
+        });
         
         resolve();
       });

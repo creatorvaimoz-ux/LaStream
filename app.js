@@ -3703,6 +3703,7 @@ app.post('/api/streams', isAuthenticated, [
       smart_stop: req.body.smartStop === 'true' || req.body.smartStop === true,
       viewer_threshold: parseInt(req.body.viewerThreshold) || 5,
       smart_stop_max: parseInt(req.body.smartStopMax) || 30,
+      repeat_mode: req.body.repeatMode || 'none',
       user_id: req.session.userId
     };
     const serverTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -3756,7 +3757,7 @@ app.post('/api/streams/youtube', isAuthenticated, uploadThumbnail.single('thumbn
     const user = await User.findById(req.session.userId);
     const YoutubeChannel = require('./models/YoutubeChannel');
     
-    const { videoId, title, description, privacy, category, tags, loopVideo, scheduleStartTime, scheduleEndTime, repeat, ytChannelId, ytMonetization, ytClosedCaptions, smartStop, viewerThreshold, smartStopMax } = req.body;
+    const { videoId, title, description, privacy, category, tags, loopVideo, scheduleStartTime, scheduleEndTime, repeatMode, ytChannelId, ytMonetization, ytClosedCaptions, smartStop, viewerThreshold, smartStopMax } = req.body;
     
     let selectedChannel;
     if (ytChannelId) {
@@ -3826,7 +3827,8 @@ app.post('/api/streams/youtube', isAuthenticated, uploadThumbnail.single('thumbn
       youtube_closed_captions: ytClosedCaptions === 'true' || ytClosedCaptions === true,
       smart_stop: smartStop === 'true' || smartStop === true,
       viewer_threshold: parseInt(viewerThreshold) || 5,
-      smart_stop_max: parseInt(smartStopMax) || 30
+      smart_stop_max: parseInt(smartStopMax) || 30,
+      repeat_mode: repeatMode || 'none'
     };
     
     if (scheduleStartTime) {
@@ -3957,6 +3959,9 @@ app.put('/api/streams/:id', isAuthenticated, uploadThumbnail.single('thumbnail')
       }
       if (req.body.smartStopMax !== undefined) {
         updateData.smart_stop_max = parseInt(req.body.smartStopMax);
+      }
+      if (req.body.repeatMode !== undefined) {
+        updateData.repeat_mode = req.body.repeatMode || 'none';
       }
       
       if (req.body.scheduleStartTime) {
@@ -4166,6 +4171,9 @@ app.put('/api/streams/:id', isAuthenticated, uploadThumbnail.single('thumbnail')
     }
     if (req.body.smartStopMax !== undefined) {
       updateData.smart_stop_max = parseInt(req.body.smartStopMax);
+    }
+    if (req.body.repeatMode !== undefined) {
+      updateData.repeat_mode = req.body.repeatMode || 'none';
     }
     const serverTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     

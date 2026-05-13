@@ -794,11 +794,11 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label class="text-xs text-slate-400 block mb-1">Repeat Mode</label>
-              <select
+              <select id="pgRepeatMode"
                 class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 text-sm focus:border-primary focus:ring-1 focus:ring-primary">
-                <option>Tidak Diulang</option>
-                <option>Harian</option>
-                <option>Mingguan</option>
+                <option value="none">Tidak Diulang</option>
+                <option value="daily">Harian (setiap hari)</option>
+                <option value="weekly">Mingguan (setiap minggu)</option>
               </select>
             </div>
             <div>
@@ -2427,8 +2427,23 @@
               </div>
             </div>
             
+            <!-- Repeat Mode -->
+            <div class="bg-slate-50 rounded-lg p-4 border border-slate-200 mt-4">
+              <label class="text-xs font-medium text-slate-800 block mb-2">
+                <i class="ti ti-repeat text-cyan-400 mr-1"></i> Repeat Mode
+              </label>
+              <select id="editRepeatMode"
+                class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-slate-800 text-sm focus:border-primary focus:ring-1 focus:ring-primary">
+                <option value="none">Tidak Diulang</option>
+                <option value="daily">Harian (setiap hari)</option>
+                <option value="weekly">Mingguan (setiap minggu)</option>
+              </select>
+              <p class="text-[10px] text-slate-500 mt-1">Setelah stream selesai, jadwal berikutnya akan dibuat otomatis</p>
+            </div>
+
             <!-- Smart Stop -->
             <div class="bg-slate-50 rounded-lg p-4 border border-slate-200 space-y-3 mt-6">
+
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2">
                   <i class="ti ti-users text-cyan-400"></i>
@@ -3041,7 +3056,8 @@
                 overlayTextType: document.getElementById('pgOverlayTextType')?.value || 'static',
                 smartStop: document.getElementById('pgSmartStop')?.checked || false,
                 viewerThreshold: document.getElementById('pgViewerThreshold')?.value || 5,
-                smartStopMax: document.getElementById('pgSmartStopMax')?.value || 30
+                smartStopMax: document.getElementById('pgSmartStopMax')?.value || 30,
+                repeatMode: document.getElementById('pgRepeatMode')?.value || 'none'
               };
               
               const useThumbnail = document.getElementById('pgUseThumbnail')?.checked;
@@ -3085,7 +3101,8 @@
                 overlayTextType: document.getElementById('pgOverlayTextType')?.value || 'static',
                 smartStop: document.getElementById('pgSmartStop')?.checked || false,
                 viewerThreshold: document.getElementById('pgViewerThreshold')?.value || 5,
-                smartStopMax: document.getElementById('pgSmartStopMax')?.value || 30
+                smartStopMax: document.getElementById('pgSmartStopMax')?.value || 30,
+                repeatMode: document.getElementById('pgRepeatMode')?.value || 'none'
               };
             }
             
@@ -4038,9 +4055,8 @@
           restoreButtons();
         });
     }
-    function editStream(streamId) {
-      console.log('Edit stream:', streamId);
-    }
+    // editStream function defined below (line ~4743)
+
     async function deleteStream(streamId) {
       if (!streamId) return;
 
@@ -4975,6 +4991,13 @@
       }
       if (editViewerThreshold) editViewerThreshold.value = stream.viewer_threshold || 5;
       if (editSmartStopMax) editSmartStopMax.value = stream.smart_stop_max || 30;
+
+      // Populate Repeat Mode
+      const editRepeatMode = document.getElementById('editRepeatMode');
+      if (editRepeatMode) {
+        editRepeatMode.value = stream.repeat_mode || 'none';
+      }
+
       const modal = document.getElementById('editStreamModal');
       document.body.style.overflow = 'hidden';
       modal.classList.remove('hidden');
@@ -4983,6 +5006,7 @@
       });
       updateDurationBadge(true);
     }
+
 
     function formatDateTimeLocal(date) {
       const serverDate = convertFromServerTime(date.toISOString());
@@ -5304,7 +5328,8 @@
               ytChannelId: document.getElementById('editYtSelectedChannelId')?.value || '',
               smartStop: document.getElementById('pgEditSmartStop')?.checked || false,
               viewerThreshold: document.getElementById('pgEditViewerThreshold')?.value || 5,
-              smartStopMax: document.getElementById('pgEditSmartStopMax')?.value || 30
+              smartStopMax: document.getElementById('pgEditSmartStopMax')?.value || 30,
+              repeatMode: document.getElementById('editRepeatMode')?.value || 'none'
             };
 
             ytFormDataObj.ytMonetization = document.getElementById('editYtEnableMonetization').checked;
@@ -5405,7 +5430,8 @@
             useAdvancedSettings: !document.getElementById('editAdvancedSettingsContent').classList.contains('hidden'),
             smartStop: document.getElementById('pgEditSmartStop')?.checked || false,
             viewerThreshold: document.getElementById('pgEditViewerThreshold')?.value || 5,
-            smartStopMax: document.getElementById('pgEditSmartStopMax')?.value || 30
+            smartStopMax: document.getElementById('pgEditSmartStopMax')?.value || 30,
+            repeatMode: document.getElementById('editRepeatMode')?.value || 'none'
           };
           const scheduleStartTime = document.getElementById('editScheduleStartTime').value;
           const scheduleEndTime = document.getElementById('editScheduleEndTime').value;

@@ -38,7 +38,8 @@ class Stream {
       overlay_text_type = 'static',
       smart_stop = false,
       viewer_threshold = 5,
-      smart_stop_max = 30
+      smart_stop_max = 30,
+      repeat_mode = 'none'
     } = streamData;
     const loop_video_int = loop_video ? 1 : 0;
     const use_advanced_settings_int = use_advanced_settings ? 1 : 0;
@@ -55,14 +56,14 @@ class Stream {
           bitrate, resolution, fps, orientation, loop_video,
           schedule_time, end_time, duration, status, status_updated_at, use_advanced_settings, user_id,
           youtube_broadcast_id, youtube_stream_id, youtube_description, youtube_privacy, youtube_category, youtube_tags, youtube_thumbnail, youtube_channel_id, is_youtube_api, youtube_monetization, youtube_closed_captions, watermark_path, watermark_position, overlay_text, overlay_text_type,
-          smart_stop, viewer_threshold, smart_stop_max
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          smart_stop, viewer_threshold, smart_stop_max, repeat_mode
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           id, title, video_id, rtmp_url, stream_key, platform, platform_icon,
           bitrate, resolution, fps, orientation, loop_video_int,
           schedule_time, end_time, duration, final_status, status_updated_at, use_advanced_settings_int, user_id,
           youtube_broadcast_id, youtube_stream_id, youtube_description, youtube_privacy, youtube_category, youtube_tags, youtube_thumbnail, youtube_channel_id, is_youtube_api_int, youtube_monetization_int, youtube_closed_captions_int, watermark_path, watermark_position, overlay_text, overlay_text_type,
-          smart_stop_int, viewer_threshold, smart_stop_max
+          smart_stop_int, viewer_threshold, smart_stop_max, repeat_mode
         ],
         function (err) {
           if (err) {
@@ -340,6 +341,8 @@ class Stream {
              WHERE id = ?`;
           params = [status, status_updated_at, id];
         } else {
+          // Check if stream has repeat_mode before clearing schedule
+          // This is handled async via rescheduleIfRepeating()
           query = `UPDATE streams SET 
               status = ?, 
               status_updated_at = ?,
@@ -414,6 +417,72 @@ class Stream {
           resolve({ id, updated: this.changes > 0 });
         }
       );
+    });
+  }
+
+  /**
+   * Reschedule a stream to next occurrence based on repeat_mode.
+   * Called after stream goes offline. If repeat_mode is 'daily' or 'weekly',
+   * shifts schedule_time (and end_time) forward and sets status back to 'scheduled'.
+   * @returns {Promise<boolean>} true if rescheduled, false if no repeat
+   */
+  static async rescheduleIfRepeating(id) {
+    return new Promise((resolve, reject) => {
+      db.get('SELECT * FROM streams WHERE id = ?', [id], (err, stream) => {
+        if (err) return reject(err);
+        if (!stream) return resolve(false);
+
+        const repeatMode = stream.repeat_mode || 'none';
+        if (repeatMode === 'none' || !stream.schedule_time) {
+          return resolve(false);
+        }
+
+        let shiftMs = 0;
+        if (repeatMode === 'daily') {
+          shiftMs = 24 * 60 * 60 * 1000; // +1 hari
+        } else if (repeatMode === 'weekly') {
+          shiftMs = 7 * 24 * 60 * 60 * 1000; // +7 hari
+        } else {
+          return resolve(false);
+        }
+
+        // Geser schedule_time dan end_time ke jadwal berikutnya
+        const originalSchedule = new Date(stream.schedule_time);
+        let newSchedule = new Date(originalSchedule.getTime() + shiftMs);
+
+        // Pastikan jadwal baru di masa depan
+        const now = new Date();
+        while (newSchedule <= now) {
+          newSchedule = new Date(newSchedule.getTime() + shiftMs);
+        }
+
+        let newEndTime = null;
+        if (stream.end_time) {
+          const originalEnd = new Date(stream.end_time);
+          const duration = originalEnd.getTime() - originalSchedule.getTime();
+          newEndTime = new Date(newSchedule.getTime() + duration).toISOString();
+        }
+
+        const newScheduleIso = newSchedule.toISOString();
+        const status_updated_at = new Date().toISOString();
+
+        const query = newEndTime
+          ? `UPDATE streams SET status = 'scheduled', status_updated_at = ?, schedule_time = ?, end_time = ?, start_time = NULL, youtube_broadcast_id = NULL, youtube_stream_id = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
+          : `UPDATE streams SET status = 'scheduled', status_updated_at = ?, schedule_time = ?, start_time = NULL, youtube_broadcast_id = NULL, youtube_stream_id = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ?`;
+
+        const params = newEndTime
+          ? [status_updated_at, newScheduleIso, newEndTime, id]
+          : [status_updated_at, newScheduleIso, id];
+
+        db.run(query, params, function(err2) {
+          if (err2) {
+            console.error('[Stream] Error rescheduling stream:', err2.message);
+            return reject(err2);
+          }
+          console.log(`[Stream] Rescheduled stream ${id} (${repeatMode}) to ${newScheduleIso}`);
+          resolve(true);
+        });
+      });
     });
   }
   static async getStreamWithVideo(id) {
