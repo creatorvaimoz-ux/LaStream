@@ -3208,6 +3208,93 @@
           else pgSmartStopOptions.classList.add('hidden');
         });
       }
+
+      // Sync logic for Stop Timer and End Time
+      const pgStartTimeInput = document.getElementById('pgStartTime');
+      const pgEndTimeInput = document.getElementById('pgEndTime');
+      const pgStopHoursInput = document.getElementById('pgStopHours');
+      const pgStopMinutesInput = document.getElementById('pgStopMinutes');
+      
+      let isSyncingTimer = false;
+
+      function formatDateTimeLocalForSync(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        return `${year}-${month}-${day}T${hours}:${minutes}`;
+      }
+
+      function syncStopTimerWithEndTime() {
+        if (isSyncingTimer || !pgStopHoursInput || !pgStopMinutesInput || !pgEndTimeInput) return;
+        isSyncingTimer = true;
+        
+        const hours = parseInt(pgStopHoursInput.value) || 0;
+        const minutes = parseInt(pgStopMinutesInput.value) || 0;
+        
+        if (hours > 0 || minutes > 0) {
+          let baseDate = new Date();
+          if (pgStartTimeInput && pgStartTimeInput.value) {
+            baseDate = new Date(pgStartTimeInput.value);
+          }
+          
+          const endDate = new Date(baseDate.getTime() + (hours * 60 + minutes) * 60000);
+          pgEndTimeInput.value = formatDateTimeLocalForSync(endDate);
+        } else if (hours === 0 && minutes === 0) {
+           pgEndTimeInput.value = '';
+        }
+        
+        isSyncingTimer = false;
+      }
+      
+      function syncEndTimeWithStopTimer() {
+        if (isSyncingTimer || !pgStopHoursInput || !pgStopMinutesInput || !pgEndTimeInput) return;
+        isSyncingTimer = true;
+        
+        if (!pgEndTimeInput.value) {
+          pgStopHoursInput.value = '';
+          pgStopMinutesInput.value = '';
+        } else {
+          let baseDate = new Date();
+          if (pgStartTimeInput && pgStartTimeInput.value) {
+            baseDate = new Date(pgStartTimeInput.value);
+          }
+          const endDate = new Date(pgEndTimeInput.value);
+          const diffMs = endDate - baseDate;
+          
+          if (diffMs > 0) {
+            const totalMinutes = Math.floor(diffMs / 60000);
+            pgStopHoursInput.value = Math.floor(totalMinutes / 60);
+            pgStopMinutesInput.value = totalMinutes % 60;
+          }
+        }
+        
+        isSyncingTimer = false;
+      }
+      
+      if (pgStopHoursInput) {
+        pgStopHoursInput.addEventListener('input', syncStopTimerWithEndTime);
+        pgStopHoursInput.addEventListener('change', syncStopTimerWithEndTime);
+      }
+      if (pgStopMinutesInput) {
+        pgStopMinutesInput.addEventListener('input', syncStopTimerWithEndTime);
+        pgStopMinutesInput.addEventListener('change', syncStopTimerWithEndTime);
+      }
+      if (pgStartTimeInput) {
+        pgStartTimeInput.addEventListener('change', () => {
+          if (pgStopHoursInput && (pgStopHoursInput.value || pgStopMinutesInput.value)) {
+            syncStopTimerWithEndTime();
+          } else if (pgEndTimeInput && pgEndTimeInput.value) {
+            syncEndTimeWithStopTimer();
+          }
+        });
+      }
+      if (pgEndTimeInput) {
+        pgEndTimeInput.addEventListener('change', syncEndTimeWithStopTimer);
+        pgEndTimeInput.addEventListener('input', syncEndTimeWithStopTimer);
+      }
+
     });
 
     updateSystemStats();

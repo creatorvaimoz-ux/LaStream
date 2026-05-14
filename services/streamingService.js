@@ -1257,10 +1257,11 @@ async function healthCheckStreams() {
               addStreamLog(streamId, `Viewer count (${viewerCount}) is at or below threshold (${threshold}). Smart Stop timer started.`);
             } else {
               const inactiveDuration = now - zeroViewerStartTime.get(streamId);
-              const maxDelay = (stream.smart_stop_max || 10) * 60 * 1000;
+              const smartStopMax = stream.smart_stop_max === 0 ? Infinity : (stream.smart_stop_max || 30);
+              const maxDelay = smartStopMax * 60 * 1000;
               
               if (inactiveDuration >= maxDelay) {
-                addStreamLog(streamId, `Smart Stop triggered: Viewer count remained below threshold for ${stream.smart_stop_max} minutes. Stopping stream.`);
+                addStreamLog(streamId, `Smart Stop triggered: Viewer count remained below threshold for ${smartStopMax} minutes. Stopping stream.`);
                 await stopStream(streamId);
                 continue;
               }

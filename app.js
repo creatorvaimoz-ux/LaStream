@@ -3702,7 +3702,7 @@ app.post('/api/streams', isAuthenticated, [
       use_advanced_settings: req.body.useAdvancedSettings === 'true' || req.body.useAdvancedSettings === true,
       smart_stop: req.body.smartStop === 'true' || req.body.smartStop === true,
       viewer_threshold: parseInt(req.body.viewerThreshold) || 5,
-      smart_stop_max: parseInt(req.body.smartStopMax) || 30,
+      smart_stop_max: req.body.smartStopMax === '0' || req.body.smartStopMax === 0 ? 0 : (parseInt(req.body.smartStopMax) || 30),
       repeat_mode: req.body.repeatMode || 'none',
       user_id: req.session.userId
     };
@@ -3827,7 +3827,7 @@ app.post('/api/streams/youtube', isAuthenticated, uploadThumbnail.single('thumbn
       youtube_closed_captions: ytClosedCaptions === 'true' || ytClosedCaptions === true,
       smart_stop: smartStop === 'true' || smartStop === true,
       viewer_threshold: parseInt(viewerThreshold) || 5,
-      smart_stop_max: parseInt(smartStopMax) || 30,
+      smart_stop_max: smartStopMax === '0' || smartStopMax === 0 ? 0 : (parseInt(smartStopMax) || 30),
       repeat_mode: repeatMode || 'none'
     };
     
@@ -3958,7 +3958,7 @@ app.put('/api/streams/:id', isAuthenticated, uploadThumbnail.single('thumbnail')
         updateData.viewer_threshold = parseInt(req.body.viewerThreshold);
       }
       if (req.body.smartStopMax !== undefined) {
-        updateData.smart_stop_max = parseInt(req.body.smartStopMax);
+        updateData.smart_stop_max = req.body.smartStopMax === '0' || req.body.smartStopMax === 0 ? 0 : (parseInt(req.body.smartStopMax) || 30);
       }
       if (req.body.repeatMode !== undefined) {
         updateData.repeat_mode = req.body.repeatMode || 'none';
@@ -4170,7 +4170,7 @@ app.put('/api/streams/:id', isAuthenticated, uploadThumbnail.single('thumbnail')
       updateData.viewer_threshold = parseInt(req.body.viewerThreshold);
     }
     if (req.body.smartStopMax !== undefined) {
-      updateData.smart_stop_max = parseInt(req.body.smartStopMax);
+      updateData.smart_stop_max = req.body.smartStopMax === '0' || req.body.smartStopMax === 0 ? 0 : (parseInt(req.body.smartStopMax) || 30);
     }
     if (req.body.repeatMode !== undefined) {
       updateData.repeat_mode = req.body.repeatMode || 'none';
