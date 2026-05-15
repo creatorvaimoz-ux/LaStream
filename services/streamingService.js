@@ -1239,15 +1239,25 @@ async function healthCheckStreams() {
 
       // Smart Stop Logic
       if (stream.status === 'live' && stream.smart_stop) {
-        let viewerCount = null;
-
-        if (stream.is_youtube_api && stream.youtube_broadcast_id) {
-          viewerCount = await youtubeService.getLiveViewerCount(
-            stream.youtube_broadcast_id,
-            stream.user_id,
-            stream.youtube_channel_id
-          );
+        // Only apply Smart Stop if there is no end_time, or we have passed the end_time
+        let shouldApplySmartStop = true;
+        if (stream.end_time) {
+          const endTime = new Date(stream.end_time);
+          if (now < endTime.getTime()) {
+            shouldApplySmartStop = false;
+          }
         }
+
+        if (shouldApplySmartStop) {
+          let viewerCount = null;
+
+          if (stream.is_youtube_api && stream.youtube_broadcast_id) {
+            viewerCount = await youtubeService.getLiveViewerCount(
+              stream.youtube_broadcast_id,
+              stream.user_id,
+              stream.youtube_channel_id
+            );
+          }
 
         if (viewerCount !== null) {
           const threshold = stream.viewer_threshold || 0;
@@ -1268,6 +1278,11 @@ async function healthCheckStreams() {
             }
           } else if (zeroViewerStartTime.has(streamId)) {
             addStreamLog(streamId, `Viewer count (${viewerCount}) recovered above threshold. Smart Stop timer reset.`);
+            zeroViewerStartTime.delete(streamId);
+          }
+        } else {
+          // If we are before end_time, clear any existing timer just in case
+          if (zeroViewerStartTime.has(streamId)) {
             zeroViewerStartTime.delete(streamId);
           }
         }

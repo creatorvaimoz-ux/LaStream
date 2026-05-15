@@ -74,18 +74,25 @@ async function checkStreamDurations() {
       const timeUntilEnd = endTime.getTime() - now.getTime();
 
       if (timeUntilEnd <= 0) {
-        console.log(`[Scheduler] Stream ${stream.id} reached end time. Stopping now.`);
-        scheduledTerminations.delete(stream.id);
+        if (stream.smart_stop) {
+          console.log(`[Scheduler] Stream ${stream.id} reached end time but has Smart Stop enabled. Delegating termination to healthCheckStreams.`);
+          scheduledTerminations.delete(stream.id);
+        } else {
+          console.log(`[Scheduler] Stream ${stream.id} reached end time. Stopping now.`);
+          scheduledTerminations.delete(stream.id);
 
-        try {
-          await streamingService.stopStream(stream.id);
-        } catch (e) {
-          console.error(`[Scheduler] Failed to stop stream ${stream.id} via streamingService:`, e);
-          await Stream.updateStatus(stream.id, 'offline', stream.user_id);
+          try {
+            await streamingService.stopStream(stream.id);
+          } catch (e) {
+            console.error(`[Scheduler] Failed to stop stream ${stream.id} via streamingService:`, e);
+            await Stream.updateStatus(stream.id, 'offline', stream.user_id);
+          }
         }
       } else if (timeUntilEnd <= 60000 && !scheduledTerminations.has(stream.id)) {
-        console.log(`[Scheduler] Stream ${stream.id} ending in < 1 minute (${Math.round(timeUntilEnd/1000)}s). Scheduling termination.`);
-        scheduleStreamTermination(stream.id, timeUntilEnd / 60000, stream.user_id);
+        if (!stream.smart_stop) {
+          console.log(`[Scheduler] Stream ${stream.id} ending in < 1 minute (${Math.round(timeUntilEnd/1000)}s). Scheduling termination.`);
+          scheduleStreamTermination(stream.id, timeUntilEnd / 60000, stream.user_id);
+        }
       }
     }
   } catch (error) {
@@ -116,6 +123,12 @@ function scheduleStreamTermination(streamId, durationMinutes, userId = null) {
     try {
       const stream = await Stream.findById(streamId);
       if (!stream || stream.status !== 'live') {
+        scheduledTerminations.delete(streamId);
+        return;
+      }
+      
+      if (stream.smart_stop) {
+        // Do not forcefully terminate if Smart Stop is enabled
         scheduledTerminations.delete(streamId);
         return;
       }

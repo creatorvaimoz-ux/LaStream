@@ -1714,10 +1714,13 @@
                       <input type="hidden" id="ytSelectedVideoId" name="ytVideoId" value="">
 
                       <div>
-                        <label class="text-sm font-medium text-slate-800 block mb-2">Stream Title</label>
-                        <input type="text" id="ytStreamTitle" name="ytStreamTitle"
-                          class="w-full px-4 py-2.5 bg-slate-100 border border-slate-300 rounded-lg focus:border-primary focus:ring-1 focus:ring-primary"
-                          placeholder="Enter stream title...">
+                        <div class="flex items-center justify-between mb-2">
+                          <label class="text-sm font-medium text-slate-800">Stream Title</label>
+                          <span class="text-[10px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">1 baris = 1 judul acak</span>
+                        </div>
+                        <textarea id="ytStreamTitle" name="ytStreamTitle" rows="2"
+                          class="w-full px-4 py-2.5 bg-slate-100 border border-slate-300 rounded-lg focus:border-primary focus:ring-1 focus:ring-primary resize-y"
+                          placeholder="Masukkan judul (pisahkan dengan baris baru untuk acak)"></textarea>
                       </div>
 
                       <div>
@@ -1911,7 +1914,103 @@
                           <input type="datetime-local" id="ytScheduleEnd" name="ytScheduleEnd"
                             class="w-full h-[42px] px-4 bg-slate-100 border border-slate-300 rounded-lg focus:border-primary focus:ring-1 focus:ring-primary text-sm [color-scheme:dark]">
                         </div>
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                          <div>
+                            <label class="text-xs text-slate-500 block mb-1">Repeat Mode</label>
+                            <select id="ytRepeatMode" class="w-full px-3 py-2.5 bg-slate-100 border border-slate-300 rounded-lg text-slate-800 text-sm focus:border-primary focus:ring-1 focus:ring-primary">
+                              <option value="none">Tidak Diulang</option>
+                              <option value="daily">Harian (setiap hari)</option>
+                              <option value="weekly">Mingguan (setiap minggu)</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label class="text-xs text-slate-500 block mb-1">Penghenti Timer <span class="text-[10px] text-slate-400">(0 = tanpa batas)</span></label>
+                            <div class="flex gap-2 items-center">
+                              <div class="relative flex-1">
+                                <input type="number" id="ytStopHours" min="0" max="999" placeholder="0" class="w-full px-3 py-2.5 pr-10 bg-slate-100 border border-slate-300 rounded-lg text-slate-800 text-sm focus:border-primary focus:ring-1 focus:ring-primary placeholder-slate-400">
+                                <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-[11px] text-slate-400 font-medium">Jam</span>
+                              </div>
+                              <span class="text-slate-400 font-bold text-sm flex-shrink-0">:</span>
+                              <div class="relative flex-1">
+                                <input type="number" id="ytStopMinutes" min="0" max="59" placeholder="0" class="w-full px-3 py-2.5 pr-12 bg-slate-100 border border-slate-300 rounded-lg text-slate-800 text-sm focus:border-primary focus:ring-1 focus:ring-primary placeholder-slate-400">
+                                <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-[11px] text-slate-400 font-medium">Menit</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                       </div>
+
+                      <div class="bg-slate-50 rounded-lg p-4 border border-slate-200 space-y-3">
+                        <div class="flex items-center justify-between">
+                          <div class="flex items-center gap-2">
+                            <i class="ti ti-dice-3 text-amber-400"></i>
+                            <div>
+                              <span class="text-xs font-medium text-slate-800">Acak ±15 mnt (Anti-Spam)</span>
+                            </div>
+                          </div>
+                          <label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
+                            <input type="checkbox" id="ytRandomTime" class="sr-only peer">
+                            <div class="w-9 h-5 bg-slate-300 rounded-full peer peer-checked:bg-amber-500"></div>
+                            <div class="absolute left-[2px] top-[2px] w-4 h-4 bg-white rounded-full transition-all peer-checked:translate-x-4"></div>
+                          </label>
+                        </div>
+                        <div id="ytRandomTimeOptions" class="hidden grid grid-cols-2 gap-3">
+                          <div>
+                            <label class="text-[10px] text-slate-500 block mb-1">Rentang Acak</label>
+                            <select id="ytRandomRange" class="w-full px-2 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 text-xs focus:border-primary">
+                              <option value="5">± 5 menit</option>
+                              <option value="10">± 10 menit</option>
+                              <option value="15" selected>± 15 menit</option>
+                              <option value="30">± 30 menit</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label class="text-[10px] text-slate-500 block mb-1">Berlaku Untuk</label>
+                            <select id="ytRandomApply" class="w-full px-2 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 text-xs focus:border-primary">
+                              <option value="both">Mulai & Selesai</option>
+                              <option value="start">Hanya Mulai</option>
+                              <option value="end">Hanya Selesai</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="bg-slate-50 rounded-lg p-4 border border-slate-200 space-y-3">
+                        <div class="flex items-center justify-between">
+                          <div class="flex items-center gap-2">
+                            <i class="ti ti-users text-cyan-400"></i>
+                            <div>
+                              <span class="text-xs font-medium text-slate-800">Smart Stop</span>
+                            </div>
+                          </div>
+                          <label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
+                            <input type="checkbox" id="ytSmartStop" class="sr-only peer">
+                            <div class="w-9 h-5 bg-slate-300 rounded-full peer peer-checked:bg-cyan-500"></div>
+                            <div class="absolute left-[2px] top-[2px] w-4 h-4 bg-white rounded-full transition-all peer-checked:translate-x-4"></div>
+                          </label>
+                        </div>
+                        <div id="ytSmartStopOptions" class="hidden grid grid-cols-2 gap-3">
+                          <div>
+                            <label class="text-[10px] text-slate-500 block mb-1">Tunda stop jika penonton ></label>
+                            <div class="relative">
+                              <input type="number" id="ytViewerThreshold" value="5" min="1" class="w-full px-2 py-1.5 pr-16 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 text-xs focus:border-primary">
+                              <span class="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-500">penonton</span>
+                            </div>
+                          </div>
+                          <div>
+                            <label class="text-[10px] text-slate-500 block mb-1">Maksimal tunda</label>
+                            <select id="ytSmartStopMax" class="w-full px-2 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 text-xs focus:border-primary">
+                              <option value="15">15 menit</option>
+                              <option value="30" selected>30 menit</option>
+                              <option value="60">1 jam</option>
+                              <option value="120">2 jam</option>
+                              <option value="0">Tanpa batas</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+
                     </div>
                   </div>
                 </div>
@@ -3024,8 +3123,27 @@
           pgSaveBtn.disabled = true;
           
           try {
-            const scheduleStart = document.getElementById('pgStartTime')?.value;
-            const scheduleEnd = document.getElementById('pgEndTime')?.value;
+            let scheduleStart = document.getElementById('pgStartTime')?.value;
+            let scheduleEnd = document.getElementById('pgEndTime')?.value;
+            
+            const isRandomTime = document.getElementById('pgRandomTime')?.checked;
+            if (isRandomTime && (scheduleStart || scheduleEnd)) {
+              const range = parseInt(document.getElementById('pgRandomRange')?.value || 15);
+              const apply = document.getElementById('pgRandomApply')?.value || 'both';
+              
+              const getRandomOffset = () => Math.floor(Math.random() * (range * 2 + 1)) - range;
+              
+              if (scheduleStart && (apply === 'both' || apply === 'start')) {
+                const d = new Date(scheduleStart);
+                d.setMinutes(d.getMinutes() + getRandomOffset());
+                scheduleStart = formatDateTimeLocalForSync(d);
+              }
+              if (scheduleEnd && (apply === 'both' || apply === 'end')) {
+                const d = new Date(scheduleEnd);
+                d.setMinutes(d.getMinutes() + getRandomOffset());
+                scheduleEnd = formatDateTimeLocalForSync(d);
+              }
+            }
             
             let url = mode === 'youtube' ? '/api/streams/youtube' : '/api/streams';
             let dataObj = {};
@@ -3208,12 +3326,35 @@
           else pgSmartStopOptions.classList.add('hidden');
         });
       }
+      
+      const ytSmartStop = document.getElementById('ytSmartStop');
+      const ytSmartStopOptions = document.getElementById('ytSmartStopOptions');
+      if (ytSmartStop && ytSmartStopOptions) {
+        ytSmartStop.addEventListener('change', function() {
+          if (this.checked) ytSmartStopOptions.classList.remove('hidden');
+          else ytSmartStopOptions.classList.add('hidden');
+        });
+      }
+
+      const ytRandomTime = document.getElementById('ytRandomTime');
+      const ytRandomTimeOptions = document.getElementById('ytRandomTimeOptions');
+      if (ytRandomTime && ytRandomTimeOptions) {
+        ytRandomTime.addEventListener('change', function() {
+          if (this.checked) ytRandomTimeOptions.classList.remove('hidden');
+          else ytRandomTimeOptions.classList.add('hidden');
+        });
+      }
 
       // Sync logic for Stop Timer and End Time
       const pgStartTimeInput = document.getElementById('pgStartTime');
       const pgEndTimeInput = document.getElementById('pgEndTime');
       const pgStopHoursInput = document.getElementById('pgStopHours');
       const pgStopMinutesInput = document.getElementById('pgStopMinutes');
+      
+      const ytScheduleStartInput = document.getElementById('ytScheduleStart');
+      const ytScheduleEndInput = document.getElementById('ytScheduleEnd');
+      const ytStopHoursInput = document.getElementById('ytStopHours');
+      const ytStopMinutesInput = document.getElementById('ytStopMinutes');
       
       let isSyncingTimer = false;
 
@@ -3248,6 +3389,50 @@
         isSyncingTimer = false;
       }
       
+      function ytSyncStopTimerWithEndTime() {
+        if (isSyncingTimer || !ytStopHoursInput || !ytStopMinutesInput || !ytScheduleEndInput) return;
+        isSyncingTimer = true;
+        
+        const hours = parseInt(ytStopHoursInput.value) || 0;
+        const minutes = parseInt(ytStopMinutesInput.value) || 0;
+        
+        if (hours > 0 || minutes > 0) {
+          let baseDate = new Date();
+          if (ytScheduleStartInput && ytScheduleStartInput.value) {
+            baseDate = new Date(ytScheduleStartInput.value);
+          }
+          
+          const endDate = new Date(baseDate.getTime() + (hours * 60 + minutes) * 60000);
+          ytScheduleEndInput.value = formatDateTimeLocalForSync(endDate);
+        } else if (hours === 0 && minutes === 0) {
+           ytScheduleEndInput.value = '';
+        }
+        
+        isSyncingTimer = false;
+      }
+      
+      function ytSyncStopTimerWithEndTime() {
+        if (isSyncingTimer || !ytStopHoursInput || !ytStopMinutesInput || !ytScheduleEndInput) return;
+        isSyncingTimer = true;
+        
+        const hours = parseInt(ytStopHoursInput.value) || 0;
+        const minutes = parseInt(ytStopMinutesInput.value) || 0;
+        
+        if (hours > 0 || minutes > 0) {
+          let baseDate = new Date();
+          if (ytScheduleStartInput && ytScheduleStartInput.value) {
+            baseDate = new Date(ytScheduleStartInput.value);
+          }
+          
+          const endDate = new Date(baseDate.getTime() + (hours * 60 + minutes) * 60000);
+          ytScheduleEndInput.value = formatDateTimeLocalForSync(endDate);
+        } else if (hours === 0 && minutes === 0) {
+           ytScheduleEndInput.value = '';
+        }
+        
+        isSyncingTimer = false;
+      }
+      
       function syncEndTimeWithStopTimer() {
         if (isSyncingTimer || !pgStopHoursInput || !pgStopMinutesInput || !pgEndTimeInput) return;
         isSyncingTimer = true;
@@ -3267,6 +3452,56 @@
             const totalMinutes = Math.floor(diffMs / 60000);
             pgStopHoursInput.value = Math.floor(totalMinutes / 60);
             pgStopMinutesInput.value = totalMinutes % 60;
+          }
+        }
+        
+        isSyncingTimer = false;
+      }
+      
+      function ytSyncEndTimeWithStopTimer() {
+        if (isSyncingTimer || !ytStopHoursInput || !ytStopMinutesInput || !ytScheduleEndInput) return;
+        isSyncingTimer = true;
+        
+        if (!ytScheduleEndInput.value) {
+          ytStopHoursInput.value = '';
+          ytStopMinutesInput.value = '';
+        } else {
+          let baseDate = new Date();
+          if (ytScheduleStartInput && ytScheduleStartInput.value) {
+            baseDate = new Date(ytScheduleStartInput.value);
+          }
+          const endDate = new Date(ytScheduleEndInput.value);
+          const diffMs = endDate - baseDate;
+          
+          if (diffMs > 0) {
+            const totalMinutes = Math.floor(diffMs / 60000);
+            ytStopHoursInput.value = Math.floor(totalMinutes / 60);
+            ytStopMinutesInput.value = totalMinutes % 60;
+          }
+        }
+        
+        isSyncingTimer = false;
+      }
+      
+      function ytSyncEndTimeWithStopTimer() {
+        if (isSyncingTimer || !ytStopHoursInput || !ytStopMinutesInput || !ytScheduleEndInput) return;
+        isSyncingTimer = true;
+        
+        if (!ytScheduleEndInput.value) {
+          ytStopHoursInput.value = '';
+          ytStopMinutesInput.value = '';
+        } else {
+          let baseDate = new Date();
+          if (ytScheduleStartInput && ytScheduleStartInput.value) {
+            baseDate = new Date(ytScheduleStartInput.value);
+          }
+          const endDate = new Date(ytScheduleEndInput.value);
+          const diffMs = endDate - baseDate;
+          
+          if (diffMs > 0) {
+            const totalMinutes = Math.floor(diffMs / 60000);
+            ytStopHoursInput.value = Math.floor(totalMinutes / 60);
+            ytStopMinutesInput.value = totalMinutes % 60;
           }
         }
         
@@ -3295,6 +3530,28 @@
         pgEndTimeInput.addEventListener('input', syncEndTimeWithStopTimer);
       }
 
+      if (ytStopHoursInput) {
+        ytStopHoursInput.addEventListener('input', ytSyncStopTimerWithEndTime);
+        ytStopHoursInput.addEventListener('change', ytSyncStopTimerWithEndTime);
+      }
+      if (ytStopMinutesInput) {
+        ytStopMinutesInput.addEventListener('input', ytSyncStopTimerWithEndTime);
+        ytStopMinutesInput.addEventListener('change', ytSyncStopTimerWithEndTime);
+      }
+      if (ytScheduleStartInput) {
+        ytScheduleStartInput.addEventListener('change', () => {
+          if (ytStopHoursInput && (ytStopHoursInput.value || ytStopMinutesInput.value)) {
+            ytSyncStopTimerWithEndTime();
+          } else if (ytScheduleEndInput && ytScheduleEndInput.value) {
+            ytSyncEndTimeWithStopTimer();
+          }
+        });
+      }
+      if (ytScheduleEndInput) {
+        ytScheduleEndInput.addEventListener('change', ytSyncEndTimeWithStopTimer);
+        ytScheduleEndInput.addEventListener('input', ytSyncEndTimeWithStopTimer);
+      }
+
     });
 
     updateSystemStats();
@@ -3312,7 +3569,13 @@
 
         const ytFormData = {
           videoId: ytVideoId,
-          title: document.getElementById('ytStreamTitle').value,
+          title: (function() {
+            const rawTitles = (document.getElementById('ytStreamTitle')?.value || '').trim();
+            if (!rawTitles) return 'Untitled Stream';
+            const titleLines = rawTitles.split('\n').map(t => t.trim()).filter(t => t.length > 0);
+            if (titleLines.length === 0) return 'Untitled Stream';
+            return titleLines[Math.floor(Math.random() * titleLines.length)];
+          })(),
           description: document.getElementById('ytDescription').value,
           privacy: document.getElementById('ytPrivacy').value,
           category: document.getElementById('ytCategory').value,
@@ -3323,10 +3586,36 @@
 
         const enableSchedule = document.getElementById('ytEnableSchedule').checked;
         if (enableSchedule) {
-          const scheduleStart = document.getElementById('ytScheduleStart').value;
-          const scheduleEnd = document.getElementById('ytScheduleEnd').value;
+          let scheduleStart = document.getElementById('ytScheduleStart').value;
+          let scheduleEnd = document.getElementById('ytScheduleEnd').value;
+          
+          const isRandomTime = document.getElementById('ytRandomTime')?.checked;
+          if (isRandomTime && (scheduleStart || scheduleEnd)) {
+            const range = parseInt(document.getElementById('ytRandomRange')?.value || 15);
+            const apply = document.getElementById('ytRandomApply')?.value || 'both';
+            const getRandomOffset = () => Math.floor(Math.random() * (range * 2 + 1)) - range;
+            
+            if (scheduleStart && (apply === 'both' || apply === 'start')) {
+              const d = new Date(scheduleStart);
+              d.setMinutes(d.getMinutes() + getRandomOffset());
+              scheduleStart = formatDateTimeLocalForSync(d);
+            }
+            if (scheduleEnd && (apply === 'both' || apply === 'end')) {
+              const d = new Date(scheduleEnd);
+              d.setMinutes(d.getMinutes() + getRandomOffset());
+              scheduleEnd = formatDateTimeLocalForSync(d);
+            }
+          }
+
           if (scheduleStart) ytFormData.scheduleStartTime = scheduleStart;
           if (scheduleEnd) ytFormData.scheduleEndTime = scheduleEnd;
+          ytFormData.repeatMode = document.getElementById('ytRepeatMode')?.value || 'none';
+        }
+
+        ytFormData.smartStop = document.getElementById('ytSmartStop')?.checked || false;
+        if (ytFormData.smartStop) {
+          ytFormData.viewerThreshold = document.getElementById('ytViewerThreshold')?.value || 5;
+          ytFormData.smartStopMax = document.getElementById('ytSmartStopMax')?.value || 30;
         }
 
         ytFormData.ytMonetization = document.getElementById('ytEnableMonetization').checked;
