@@ -41,6 +41,31 @@ class TelegramService {
 
     return await this.sendMessage(message, true);
   }
+
+  static async sendStreamStart(streamTitle, platform) {
+    try {
+      const settings = await AppSettings.getTelegramSettings();
+      if (!settings.enabled || !settings.notifyStart) return { success: false };
+      const message = `▶️ <b>STREAM DIMULAI</b>\n\n<b>Judul:</b> ${streamTitle || 'Untitled'}\n<b>Platform:</b> ${platform || 'Custom'}`;
+      return await this.sendMessage(message, false);
+    } catch (e) { return { success: false }; }
+  }
+
+  static async sendStreamStop(streamTitle, platform) {
+    try {
+      const settings = await AppSettings.getTelegramSettings();
+      if (!settings.enabled || !settings.notifyStop) return { success: false };
+      const message = `⏹️ <b>STREAM BERHENTI</b>\n\n<b>Judul:</b> ${streamTitle || 'Untitled'}\n<b>Platform:</b> ${platform || 'Custom'}`;
+      return await this.sendMessage(message, false);
+    } catch (e) { return { success: false }; }
+  }
+
+  static async sendStreamError(streamTitle, platform, errorMsg) {
+    try {
+      const message = `❌ <b>STREAM ERROR</b>\n\n<b>Judul:</b> ${streamTitle || 'Untitled'}\n<b>Platform:</b> ${platform || 'Custom'}\n<b>Detail:</b> ${errorMsg}`;
+      return await this.sendMessage(message, true);
+    } catch (e) { return { success: false }; }
+  }
 }
 
 module.exports = TelegramService;

@@ -937,6 +937,7 @@ async function startStream(streamId, isRetry = false, baseUrl = null) {
               if (schedulerService) {
                 schedulerService.handleStreamStopped(streamId);
               }
+              TelegramService.sendStreamStop(currentStream.title, currentStream.platform).catch(e => console.error('Telegram stop alert error:', e));
             } catch (e) { }
           }
           cleanupStreamData(streamId);
@@ -1004,6 +1005,7 @@ async function startStream(streamId, isRetry = false, baseUrl = null) {
           if (schedulerService) {
             schedulerService.handleStreamStopped(streamId);
           }
+          TelegramService.sendStreamStop(currentStream.title, currentStream.platform).catch(e => console.error('Telegram stop alert error:', e));
         } catch (e) { }
         cleanupStreamData(streamId);
       }
@@ -1018,6 +1020,7 @@ async function startStream(streamId, isRetry = false, baseUrl = null) {
       activeStreams.delete(streamId);
       try {
         await Stream.updateStatus(streamId, 'offline', stream.user_id);
+        TelegramService.sendStreamError(stream.title, stream.platform, err.message).catch(e => {});
       } catch (e) { }
       cleanupStreamData(streamId);
     });
@@ -1036,6 +1039,7 @@ async function startStream(streamId, isRetry = false, baseUrl = null) {
 
     if (!isRetry) {
       await Stream.updateStatus(streamId, 'live', stream.user_id, { startTimeOverride: startTimeIso });
+      TelegramService.sendStreamStart(stream.title, stream.platform).catch(e => console.error('Telegram start alert error:', e));
     }
 
     if (schedulerService && originalEndTime) {
@@ -1051,6 +1055,10 @@ async function startStream(streamId, isRetry = false, baseUrl = null) {
     };
   } catch (error) {
     addStreamLog(streamId, `Start failed: ${error.message}`);
+    try {
+      const stream = await Stream.findById(streamId);
+      if (stream) TelegramService.sendStreamError(stream.title, stream.platform, error.message).catch(e => {});
+    } catch(e) {}
     return { success: false, error: error.message, code: error.code || null };
   } finally {
     startingStreams.delete(streamId);
@@ -1107,6 +1115,7 @@ async function stopStream(streamId) {
         addStreamLog(streamId, `[Scheduler] Stream dijadwalkan ulang (${stream.repeat_mode})`);
         console.log(`[Scheduler] Stream ${streamId} dijadwalkan ulang (${stream.repeat_mode})`);
       }
+      TelegramService.sendStreamStop(stream.title, stream.platform).catch(e => console.error('Telegram stop alert error:', e));
     }
 
     if (schedulerService) {
