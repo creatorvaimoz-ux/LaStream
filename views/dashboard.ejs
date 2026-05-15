@@ -3964,7 +3964,17 @@
       }
       let statusBadge = '';
       if (stream.status === 'live') {
-        statusBadge = `<span class="flex items-center text-red-400"><span class="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse mr-1"></span><span class="text-[10px] font-medium">Live${durationDisplay ? ' • ' : ''}</span>${durationDisplay ? `<span class="text-[10px] font-medium tabular-nums live-duration" data-start-time="${stream.start_time}">${durationDisplay}</span>` : ''}</span>`;
+        let healthIconMobile = '';
+        if (stream.stream_health) {
+          const colors = { 'green': 'text-green-500', 'blue': 'text-blue-500', 'yellow': 'text-yellow-500', 'red': 'text-red-500' };
+          const colorClass = colors[stream.stream_health] || 'text-green-500';
+          healthIconMobile = `<i class="ti ti-activity ${colorClass} ml-1 text-[10px]" title="Stream Health: ${stream.stream_health}"></i>`;
+        }
+        let viewerHTMLMobile = '';
+        if (stream.viewer_count !== undefined && stream.viewer_count !== null) {
+          viewerHTMLMobile = `<span class="ml-1 inline-flex items-center text-[10px]"><i class="ti ti-eye mr-0.5"></i>${stream.viewer_count}</span>`;
+        }
+        statusBadge = `<span class="flex items-center text-red-400"><span class="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse mr-1"></span><span class="text-[10px] font-medium">Live${durationDisplay ? ' • ' : ''}</span>${durationDisplay ? `<span class="text-[10px] font-medium tabular-nums live-duration" data-start-time="${stream.start_time}">${durationDisplay}</span>` : ''}${viewerHTMLMobile}${healthIconMobile}</span>`;
       } else if (stream.status === 'scheduled') {
         statusBadge = `<span class="flex items-center text-yellow-500"><i class="ti ti-calendar-event text-[10px] mr-1"></i><span class="text-[10px] font-medium">Scheduled</span></span>`;
       } else {
@@ -4054,11 +4064,23 @@
         const minutes = Math.floor((durationMs % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
         const seconds = Math.floor((durationMs % (1000 * 60)) / 1000).toString().padStart(2, '0');
         durationDisplay = `${hours}:${minutes}:${seconds}`;
+        let healthIcon = '';
+        if (stream.stream_health) {
+          const colors = { 'green': 'text-green-500', 'blue': 'text-blue-500', 'yellow': 'text-yellow-500', 'red': 'text-red-500' };
+          const colorClass = colors[stream.stream_health] || 'text-green-500';
+          healthIcon = `<i class="ti ti-activity ${colorClass} ml-2" title="Stream Health: ${stream.stream_health}"></i>`;
+        }
+        let viewerHTML = '';
+        if (stream.viewer_count !== undefined && stream.viewer_count !== null) {
+          viewerHTML = `<span class="ml-2 inline-flex items-center text-xs"><i class="ti ti-eye mr-1"></i>${stream.viewer_count}</span>`;
+        }
         statusBadge = `
           <span class="flex items-center bg-red-400/10 text-red-400 rounded-full px-2.5 py-1">
             <span class="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse mr-1.5"></span>
             <span class="text-xs font-medium">Live • <span class="live-duration tabular-nums" data-start-time="${stream.start_time}">
               ${durationDisplay}</span></span>
+            ${viewerHTML}
+            ${healthIcon}
           </span>
         `;
       } else {

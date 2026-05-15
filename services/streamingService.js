@@ -1161,6 +1161,13 @@ function getActiveStreamInfo(streamId) {
   const streamData = activeStreams.get(streamId);
   if (!streamData) return null;
 
+  const now = Date.now();
+  const inactiveDuration = now - streamData.lastActivity;
+  let health = 'green';
+  if (inactiveDuration >= 30000) health = 'red';
+  else if (inactiveDuration >= 15000) health = 'yellow';
+  else if (inactiveDuration >= 5000) health = 'blue';
+
   return {
     streamId,
     userId: streamData.userId,
@@ -1168,7 +1175,10 @@ function getActiveStreamInfo(streamId) {
     endTime: streamData.endTime,
     pid: streamData.pid,
     lastActivity: streamData.lastActivity,
-    retryCount: streamRetryCount.get(streamId) || 0
+    retryCount: streamRetryCount.get(streamId) || 0,
+    viewerCount: streamData.viewerCount || 0,
+    health: health,
+    liveDurationMs: now - new Date(streamData.startTime).getTime()
   };
 }
 
@@ -1237,6 +1247,19 @@ async function healthCheckStreams() {
       const stream = await Stream.findById(streamId);
       if (!stream) continue;
 
+      // Fetch Viewer Count unconditionally for YouTube API Streams
+      let viewerCount = null;
+      if (stream.status === 'live' && stream.is_youtube_api && stream.youtube_broadcast_id) {
+        viewerCount = await youtubeService.getLiveViewerCount(
+          stream.youtube_broadcast_id,
+          stream.user_id,
+          stream.youtube_channel_id
+        );
+        if (viewerCount !== null) {
+          streamData.viewerCount = viewerCount;
+        }
+      }
+
       // Smart Stop Logic
       if (stream.status === 'live' && stream.smart_stop) {
         // Only apply Smart Stop if there is no end_time, or we have passed the end_time
@@ -1249,36 +1272,27 @@ async function healthCheckStreams() {
         }
 
         if (shouldApplySmartStop) {
-          let viewerCount = null;
-
-          if (stream.is_youtube_api && stream.youtube_broadcast_id) {
-            viewerCount = await youtubeService.getLiveViewerCount(
-              stream.youtube_broadcast_id,
-              stream.user_id,
-              stream.youtube_channel_id
-            );
-          }
-
-        if (viewerCount !== null) {
-          const threshold = stream.viewer_threshold || 0;
-          if (viewerCount <= threshold) {
-            if (!zeroViewerStartTime.has(streamId)) {
-              zeroViewerStartTime.set(streamId, now);
-              addStreamLog(streamId, `Viewer count (${viewerCount}) is at or below threshold (${threshold}). Smart Stop timer started.`);
-            } else {
-              const inactiveDuration = now - zeroViewerStartTime.get(streamId);
-              const smartStopMax = stream.smart_stop_max === 0 ? Infinity : (stream.smart_stop_max || 30);
-              const maxDelay = smartStopMax * 60 * 1000;
-              
-              if (inactiveDuration >= maxDelay) {
-                addStreamLog(streamId, `Smart Stop triggered: Viewer count remained below threshold for ${smartStopMax} minutes. Stopping stream.`);
-                await stopStream(streamId);
-                continue;
+          if (viewerCount !== null) {
+            const threshold = stream.viewer_threshold || 0;
+            if (viewerCount <= threshold) {
+              if (!zeroViewerStartTime.has(streamId)) {
+                zeroViewerStartTime.set(streamId, now);
+                addStreamLog(streamId, `Viewer count (${viewerCount}) is at or below threshold (${threshold}). Smart Stop timer started.`);
+              } else {
+                const inactiveDuration = now - zeroViewerStartTime.get(streamId);
+                const smartStopMax = stream.smart_stop_max === 0 ? Infinity : (stream.smart_stop_max || 30);
+                const maxDelay = smartStopMax * 60 * 1000;
+                
+                if (inactiveDuration >= maxDelay) {
+                  addStreamLog(streamId, `Smart Stop triggered: Viewer count remained below threshold for ${smartStopMax} minutes. Stopping stream.`);
+                  await stopStream(streamId);
+                  continue;
+                }
               }
+            } else if (zeroViewerStartTime.has(streamId)) {
+              addStreamLog(streamId, `Viewer count (${viewerCount}) recovered above threshold. Smart Stop timer reset.`);
+              zeroViewerStartTime.delete(streamId);
             }
-          } else if (zeroViewerStartTime.has(streamId)) {
-            addStreamLog(streamId, `Viewer count (${viewerCount}) recovered above threshold. Smart Stop timer reset.`);
-            zeroViewerStartTime.delete(streamId);
           }
         } else {
           // If we are before end_time, clear any existing timer just in case
@@ -1286,9 +1300,7 @@ async function healthCheckStreams() {
             zeroViewerStartTime.delete(streamId);
           }
         }
-      }
-
-      if (streamData.process && streamData.process.exitCode !== null) {
+      }      if (streamData.process && streamData.process.exitCode !== null) {
         activeStreams.delete(streamId);
         const stream = await Stream.findById(streamId);
         if (stream && stream.status === 'live') {

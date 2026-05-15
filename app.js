@@ -3635,6 +3635,21 @@ app.get('/api/streams', isAuthenticated, async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const search = req.query.search || '';
+    const streamingService = require('./services/streamingService');
+    const attachMetrics = (streamsList) => {
+      return streamsList.map(stream => {
+        if (stream.status === 'live') {
+          const metrics = streamingService.getActiveStreamInfo(stream.id);
+          if (metrics) {
+            stream.live_duration_ms = metrics.liveDurationMs;
+            stream.viewer_count = metrics.viewerCount;
+            stream.stream_health = metrics.health;
+          }
+        }
+        return stream;
+      });
+    };
+
     if (req.query.page || req.query.limit) {
       const result = await Stream.findAllPaginated(req.session.userId, {
         page,
@@ -3642,9 +3657,13 @@ app.get('/api/streams', isAuthenticated, async (req, res) => {
         filter,
         search
       });
+      if (result.streams) {
+        result.streams = attachMetrics(result.streams);
+      }
       res.json({ success: true, ...result });
     } else {
-      const streams = await Stream.findAll(req.session.userId, filter);
+      let streams = await Stream.findAll(req.session.userId, filter);
+      streams = attachMetrics(streams);
       res.json({ success: true, streams });
     }
   } catch (error) {
