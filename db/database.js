@@ -464,6 +464,14 @@ function createTables() {
         db.run(`ALTER TABLE streams ADD COLUMN repeat_mode TEXT DEFAULT 'none'`, (err) => {
           if (err && !err.message.includes('duplicate column name')) console.error(err.message);
         });
+
+        // Add synthetic media disclosure (Konten yang dimodifikasi AI) to streams
+        db.run(`ALTER TABLE streams ADD COLUMN youtube_synthetic_media INTEGER DEFAULT 0`, (err) => {
+          if (err && !err.message.includes('duplicate column name')) console.error(err.message);
+        });
+        db.run(`ALTER TABLE rotation_items ADD COLUMN youtube_synthetic_media INTEGER DEFAULT 0`, (err) => {
+          if (err && !err.message.includes('duplicate column name')) console.error(err.message);
+        });
         
         resolve();
       });

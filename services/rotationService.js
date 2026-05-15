@@ -335,7 +335,8 @@ async function startRotationStream(rotation, item) {
         },
         status: {
           privacyStatus: item.privacy || 'unlisted',
-          selfDeclaredMadeForKids: false
+          selfDeclaredMadeForKids: false,
+          containsSyntheticMedia: item.youtube_synthetic_media === true || item.youtube_synthetic_media === 1 || false
         },
         contentDetails: {
           enableAutoStart: true,
@@ -440,6 +441,7 @@ async function startRotationStream(rotation, item) {
       youtube_tags: item.tags,
       youtube_monetization: monetizationEnabled,
       youtube_closed_captions: item.youtube_closed_captions === true,
+      youtube_synthetic_media: item.youtube_synthetic_media === true || item.youtube_synthetic_media === 1,
       youtube_channel_id: selectedChannel.id,
       is_youtube_api: true,
       schedule_time: rotation.start_time,

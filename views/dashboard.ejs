@@ -2506,7 +2506,19 @@
                     </label>
                   </div>
 
-                  <div id="editYtScheduleSettings" class="hidden space-y-4">
+                  <div class="h-auto py-2 flex items-start justify-between border-t border-slate-100 pt-3">
+                    <div class="flex-1 pr-4">
+                      <label class="text-sm text-slate-600 font-medium block">Konten Dimodifikasi AI</label>
+                      <p class="text-[10px] text-slate-400 mt-0.5 leading-relaxed">Wajib pilih "Ya" jika konten ini menggunakan AI untuk membuat suara/visual realistis, memodifikasi rekaman nyata, atau menghasilkan adegan yang tidak pernah terjadi. YouTube akan menambahkan label pengungkapan.</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer mt-1 flex-shrink-0">
+                      <input type="checkbox" id="editYtSyntheticMedia" class="sr-only peer">
+                      <div class="w-11 h-6 bg-slate-100 rounded-full peer peer-checked:bg-amber-500"></div>
+                      <div class="absolute left-[2px] top-[2px] w-5 h-5 bg-white rounded-full transition-all peer-checked:translate-x-5"></div>
+                    </label>
+                  </div>
+
+
                     <div>
                       <label class="text-xs text-slate-500 block mb-1">Start Time</label>
                       <input type="datetime-local" id="editYtScheduleStart" name="ytScheduleStart"
@@ -5216,6 +5228,8 @@
         renderEditYtTags();
 
         document.getElementById('editYtEnableMonetization').checked = stream.youtube_monetization === true || stream.youtube_monetization === 1;
+        document.getElementById('editYtEnableClosedCaptions').checked = stream.youtube_closed_captions === true || stream.youtube_closed_captions === 1;
+        document.getElementById('editYtSyntheticMedia').checked = stream.youtube_synthetic_media === true || stream.youtube_synthetic_media === 1;
         const editYtCC = document.getElementById('editYtEnableClosedCaptions');
         if (editYtCC) editYtCC.checked = stream.youtube_closed_captions === true || stream.youtube_closed_captions === 1;
 
@@ -5731,6 +5745,7 @@
             };
 
             ytFormDataObj.ytMonetization = document.getElementById('editYtEnableMonetization').checked;
+            ytFormDataObj.ytSyntheticMedia = document.getElementById('editYtSyntheticMedia').checked;
             ytFormDataObj.ytClosedCaptions = document.getElementById('editYtEnableClosedCaptions')?.checked || false;
 
             const enableSchedule = document.getElementById('editYtEnableSchedule').checked;

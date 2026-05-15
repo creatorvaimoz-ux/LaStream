@@ -173,7 +173,8 @@ async function createYouTubeBroadcast(streamId, baseUrl) {
     },
     status: {
       privacyStatus: stream.youtube_privacy || 'unlisted',
-      selfDeclaredMadeForKids: false
+      selfDeclaredMadeForKids: false,
+      containsSyntheticMedia: stream.youtube_synthetic_media === true || stream.youtube_synthetic_media === 1 || false
     }
   };
 

@@ -3629,6 +3629,129 @@ app.get('/api/stream/content', isAuthenticated, async (req, res) => {
   }
 });
 
+// === YouTube Playlist API ===
+app.get('/api/youtube/playlists', isAuthenticated, async (req, res) => {
+  try {
+    const YoutubeChannel = require('./models/YoutubeChannel');
+    const { decrypt } = require('./utils/encryption');
+    const channels = await YoutubeChannel.findAll(req.session.userId);
+    const channelId = req.query.channelId;
+    let selectedChannel = channelId ? channels.find(c => c.id === channelId || c.channel_id === channelId) : null;
+    if (!selectedChannel) selectedChannel = channels.find(c => c.is_default) || channels[0];
+    if (!selectedChannel || !selectedChannel.access_token) {
+      return res.json({ success: false, error: 'Channel YouTube belum terhubung.', playlists: [] });
+    }
+    const creds = await getYouTubeCredentials(req.session.userId);
+    if (!creds) return res.json({ success: false, error: 'Kredensial API belum dikonfigurasi.', playlists: [] });
+    const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+    const host = req.headers['x-forwarded-host'] || req.get('host');
+    const redirectUri = `${protocol}://${host}/auth/youtube/callback`;
+    const oauth2Client = getYouTubeOAuth2Client(creds.clientId, creds.clientSecret, redirectUri);
+    oauth2Client.setCredentials({
+      access_token: decrypt(selectedChannel.access_token),
+      refresh_token: selectedChannel.refresh_token ? decrypt(selectedChannel.refresh_token) : null
+    });
+    const { google } = require('googleapis');
+    const youtube = google.youtube({ version: 'v3', auth: oauth2Client });
+    const response = await youtube.playlists.list({
+      part: 'snippet,contentDetails',
+      mine: true,
+      maxResults: 50
+    });
+    const playlists = (response.data.items || []).map(p => ({
+      id: p.id,
+      title: p.snippet.title,
+      description: p.snippet.description,
+      thumbnail: p.snippet.thumbnails?.default?.url || '',
+      itemCount: p.contentDetails?.itemCount || 0,
+      privacy: p.snippet.privacyStatus
+    }));
+    res.json({ success: true, playlists });
+  } catch (error) {
+    console.error('Error fetching YouTube playlists:', error);
+    res.json({ success: false, error: error.message, playlists: [] });
+  }
+});
+
+app.post('/api/youtube/playlists', isAuthenticated, async (req, res) => {
+  try {
+    const { title, description = '', privacy = 'public', channelId } = req.body;
+    if (!title) return res.status(400).json({ success: false, error: 'Judul playlist diperlukan.' });
+    const YoutubeChannel = require('./models/YoutubeChannel');
+    const { decrypt } = require('./utils/encryption');
+    const channels = await YoutubeChannel.findAll(req.session.userId);
+    let selectedChannel = channelId ? channels.find(c => c.id === channelId || c.channel_id === channelId) : null;
+    if (!selectedChannel) selectedChannel = channels.find(c => c.is_default) || channels[0];
+    if (!selectedChannel || !selectedChannel.access_token) {
+      return res.json({ success: false, error: 'Channel YouTube belum terhubung.' });
+    }
+    const creds = await getYouTubeCredentials(req.session.userId);
+    if (!creds) return res.json({ success: false, error: 'Kredensial API belum dikonfigurasi.' });
+    const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+    const host = req.headers['x-forwarded-host'] || req.get('host');
+    const redirectUri = `${protocol}://${host}/auth/youtube/callback`;
+    const oauth2Client = getYouTubeOAuth2Client(creds.clientId, creds.clientSecret, redirectUri);
+    oauth2Client.setCredentials({
+      access_token: decrypt(selectedChannel.access_token),
+      refresh_token: selectedChannel.refresh_token ? decrypt(selectedChannel.refresh_token) : null
+    });
+    const { google } = require('googleapis');
+    const youtube = google.youtube({ version: 'v3', auth: oauth2Client });
+    const response = await youtube.playlists.insert({
+      part: 'snippet,status',
+      requestBody: {
+        snippet: { title, description },
+        status: { privacyStatus: privacy }
+      }
+    });
+    res.json({ success: true, playlist: { id: response.data.id, title: response.data.snippet.title } });
+  } catch (error) {
+    console.error('Error creating YouTube playlist:', error);
+    res.json({ success: false, error: error.message });
+  }
+});
+
+app.post('/api/youtube/playlists/:playlistId/items', isAuthenticated, async (req, res) => {
+  try {
+    const { playlistId } = req.params;
+    const { videoId, channelId } = req.body;
+    if (!videoId) return res.status(400).json({ success: false, error: 'Video ID diperlukan.' });
+    const YoutubeChannel = require('./models/YoutubeChannel');
+    const { decrypt } = require('./utils/encryption');
+    const channels = await YoutubeChannel.findAll(req.session.userId);
+    let selectedChannel = channelId ? channels.find(c => c.id === channelId || c.channel_id === channelId) : null;
+    if (!selectedChannel) selectedChannel = channels.find(c => c.is_default) || channels[0];
+    if (!selectedChannel || !selectedChannel.access_token) {
+      return res.json({ success: false, error: 'Channel YouTube belum terhubung.' });
+    }
+    const creds = await getYouTubeCredentials(req.session.userId);
+    if (!creds) return res.json({ success: false, error: 'Kredensial API belum dikonfigurasi.' });
+    const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+    const host = req.headers['x-forwarded-host'] || req.get('host');
+    const redirectUri = `${protocol}://${host}/auth/youtube/callback`;
+    const oauth2Client = getYouTubeOAuth2Client(creds.clientId, creds.clientSecret, redirectUri);
+    oauth2Client.setCredentials({
+      access_token: decrypt(selectedChannel.access_token),
+      refresh_token: selectedChannel.refresh_token ? decrypt(selectedChannel.refresh_token) : null
+    });
+    const { google } = require('googleapis');
+    const youtube = google.youtube({ version: 'v3', auth: oauth2Client });
+    const response = await youtube.playlistItems.insert({
+      part: 'snippet',
+      requestBody: {
+        snippet: {
+          playlistId,
+          resourceId: { kind: 'youtube#video', videoId }
+        }
+      }
+    });
+    res.json({ success: true, item: response.data });
+  } catch (error) {
+    console.error('Error adding video to YouTube playlist:', error);
+    res.json({ success: false, error: error.message });
+  }
+});
+
 app.get('/api/streams', isAuthenticated, async (req, res) => {
   try {
     const filter = req.query.filter;
@@ -3776,7 +3899,7 @@ app.post('/api/streams/youtube', isAuthenticated, uploadThumbnail.single('thumbn
     const user = await User.findById(req.session.userId);
     const YoutubeChannel = require('./models/YoutubeChannel');
     
-    const { videoId, title, description, privacy, category, tags, loopVideo, scheduleStartTime, scheduleEndTime, repeatMode, ytChannelId, ytMonetization, ytClosedCaptions, smartStop, viewerThreshold, smartStopMax } = req.body;
+    const { videoId, title, description, privacy, category, tags, loopVideo, scheduleStartTime, scheduleEndTime, repeatMode, ytChannelId, ytMonetization, ytClosedCaptions, ytSyntheticMedia, smartStop, viewerThreshold, smartStopMax } = req.body;
     
     let selectedChannel;
     if (ytChannelId) {
@@ -3844,6 +3967,7 @@ app.post('/api/streams/youtube', isAuthenticated, uploadThumbnail.single('thumbn
       is_youtube_api: true,
       youtube_monetization: ytMonetization === 'true' || ytMonetization === true,
       youtube_closed_captions: ytClosedCaptions === 'true' || ytClosedCaptions === true,
+      youtube_synthetic_media: ytSyntheticMedia === 'true' || ytSyntheticMedia === true,
       smart_stop: smartStop === 'true' || smartStop === true,
       viewer_threshold: parseInt(viewerThreshold) || 5,
       smart_stop_max: smartStopMax === '0' || smartStopMax === 0 ? 0 : (parseInt(smartStopMax) || 30),
@@ -3969,6 +4093,9 @@ app.put('/api/streams/:id', isAuthenticated, uploadThumbnail.single('thumbnail')
       }
       if (req.body.ytClosedCaptions !== undefined) {
         updateData.youtube_closed_captions = req.body.ytClosedCaptions === 'true' || req.body.ytClosedCaptions === true;
+      }
+      if (req.body.ytSyntheticMedia !== undefined) {
+        updateData.youtube_synthetic_media = req.body.ytSyntheticMedia === 'true' || req.body.ytSyntheticMedia === true;
       }
       if (req.body.smartStop !== undefined) {
         updateData.smart_stop = req.body.smartStop === 'true' || req.body.smartStop === true;

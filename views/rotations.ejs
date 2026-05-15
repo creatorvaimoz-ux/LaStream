@@ -786,6 +786,82 @@ function addRotationItem() {
             </button>
           </div>
         </div>
+        <div class="md:col-span-2 bg-green-50 rounded-lg border border-green-100 overflow-hidden mt-1">
+          <div class="px-3 py-2 flex items-center justify-between cursor-pointer hover:bg-green-100/50 transition-colors" onclick="this.nextElementSibling.classList.toggle('hidden')">
+            <div class="flex items-center gap-2">
+              <i class="ti ti-playlist text-green-600 text-sm"></i>
+              <span class="text-xs font-semibold text-green-700">📋 Masukkan ke Playlist YouTube</span>
+              <span class="yt-playlist-badge hidden text-[10px] bg-green-500 text-white rounded-full px-1.5 py-0.5 font-medium"></span>
+            </div>
+            <i class="ti ti-chevron-down text-green-400 text-xs"></i>
+          </div>
+          <div class="hidden p-3 border-t border-green-100 space-y-2">
+            <p class="text-[11px] text-green-700">Pilih playlist dari YouTube Studio Anda, atau buat playlist baru langsung di sini.</p>
+            <div class="flex gap-2">
+              <select class="yt-playlist-select flex-1 px-2 py-1.5 bg-white border border-green-200 rounded text-xs focus:border-green-400" name="items[${idx}][yt_playlist_id]">
+                <option value="">-- Tidak dimasukkan playlist --</option>
+              </select>
+              <button type="button" onclick="loadYtPlaylists(${idx})" class="px-2 py-1.5 bg-green-100 hover:bg-green-200 text-green-700 rounded text-xs border border-green-200 flex items-center gap-1 transition-colors" title="Muat ulang playlist">
+                <i class="ti ti-refresh text-xs"></i>
+              </button>
+            </div>
+            <div class="flex gap-2">
+              <input type="text" class="yt-new-playlist-title flex-1 px-2 py-1.5 bg-white border border-green-200 rounded text-xs focus:border-green-400" placeholder="Nama playlist baru...">
+              <select class="yt-new-playlist-privacy px-2 py-1.5 bg-white border border-green-200 rounded text-xs">
+                <option value="public">Publik</option>
+                <option value="unlisted">Tidak Terdaftar</option>
+                <option value="private">Privat</option>
+              </select>
+              <button type="button" onclick="createYtPlaylist(${idx})" class="px-2 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded text-xs flex items-center gap-1 transition-colors">
+                <i class="ti ti-plus text-xs"></i> Buat
+              </button>
+            </div>
+            <input type="hidden" class="yt-playlist-id-hidden" name="items[${idx}][yt_playlist_id_value]" value="">
+          </div>
+        </div>
+        <div class="md:col-span-2 bg-sky-50 rounded-lg border border-sky-100 overflow-hidden mt-1">
+          <div class="px-3 py-2 flex items-center justify-between cursor-pointer hover:bg-sky-100/50 transition-colors ai-checklist-toggle" onclick="toggleAiChecklist(${idx})">
+            <div class="flex items-center gap-2">
+              <i class="ti ti-checklist text-sky-600 text-sm"></i>
+              <span class="text-xs font-semibold text-sky-700">✅ Cek Kesesuaian Konten AI dengan YT Studio</span>
+              <span class="ai-check-badge hidden text-[10px] bg-sky-500 text-white rounded-full px-1.5 py-0.5 font-medium"></span>
+            </div>
+            <i class="ti ti-chevron-down text-sky-400 text-xs ai-checklist-chevron transition-transform duration-200"></i>
+          </div>
+          <div class="hidden ai-checklist-section border-t border-sky-100 p-3 space-y-2">
+            <p class="text-[11px] text-sky-700 mb-2">Centang item yang sudah Anda verifikasi sesuai dengan pengaturan di YouTube Studio.</p>
+            <label class="flex items-start gap-2 text-xs text-slate-600 cursor-pointer">
+              <input type="checkbox" class="mt-0.5 rounded border-slate-300 text-sky-500 ai-check-item" data-label="Judul sudah sesuai">
+              <span>📝 <strong>Judul</strong> sudah sesuai dan tidak melanggar pedoman komunitas YT</span>
+            </label>
+            <label class="flex items-start gap-2 text-xs text-slate-600 cursor-pointer">
+              <input type="checkbox" class="mt-0.5 rounded border-slate-300 text-sky-500 ai-check-item" data-label="Deskripsi valid">
+              <span>📄 <strong>Deskripsi</strong> tidak mengandung link spam atau kata-kata terlarang</span>
+            </label>
+            <label class="flex items-start gap-2 text-xs text-slate-600 cursor-pointer">
+              <input type="checkbox" class="mt-0.5 rounded border-slate-300 text-sky-500 ai-check-item" data-label="Tags relevan">
+              <span>🏷️ <strong>Tags</strong> relevan dengan konten dan tidak melebihi 500 karakter</span>
+            </label>
+            <label class="flex items-start gap-2 text-xs text-slate-600 cursor-pointer">
+              <input type="checkbox" class="mt-0.5 rounded border-slate-300 text-sky-500 ai-check-item" data-label="Thumbnail sesuai">
+              <span>🖼️ <strong>Thumbnail</strong> tidak clickbait berlebihan dan sesuai konten</span>
+            </label>
+            <label class="flex items-start gap-2 text-xs text-slate-600 cursor-pointer">
+              <input type="checkbox" class="mt-0.5 rounded border-slate-300 text-sky-500 ai-check-item" data-label="Kategori tepat">
+              <span>📂 <strong>Kategori</strong> sudah dipilih yang paling tepat untuk konten ini</span>
+            </label>
+            <label class="flex items-start gap-2 text-xs text-slate-600 cursor-pointer">
+              <input type="checkbox" class="mt-0.5 rounded border-slate-300 text-sky-500 ai-check-item" data-label="Privasi dikonfigurasi">
+              <span>🔒 <strong>Privasi</strong> sudah diatur (Publik / Tidak Terdaftar / Privat)</span>
+            </label>
+            <div class="mt-2 pt-2 border-t border-sky-100">
+              <div class="ai-checklist-progress text-[11px] text-sky-600 font-medium">0/6 item diverifikasi</div>
+              <div class="w-full bg-sky-100 rounded-full h-1 mt-1">
+                <div class="ai-checklist-bar h-1 bg-sky-500 rounded-full transition-all duration-300" style="width:0%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   `;
@@ -795,6 +871,97 @@ function addRotationItem() {
   initVideoSelector(itemEl, idx);
   initTagsInput(itemEl, idx);
   initThumbnailUpload(itemEl);
+}
+
+// ── YOUTUBE PLAYLIST FUNCTIONS ─────────────────────────────────────────────
+async function loadYtPlaylists(idx) {
+  const itemEl = document.querySelector(`.rotation-item[data-index="${idx}"]`);
+  if (!itemEl) return;
+  const select = itemEl.querySelector('.yt-playlist-select');
+  if (!select) return;
+  const channelId = document.getElementById('rotationChannelId')?.value || '';
+  select.innerHTML = '<option value="">Memuat...</option>';
+  try {
+    const res = await fetch(`/api/youtube/playlists?channelId=${encodeURIComponent(channelId)}`);
+    const data = await res.json();
+    if (!data.success || !data.playlists.length) {
+      select.innerHTML = '<option value="">-- Belum ada playlist --</option>';
+      return;
+    }
+    select.innerHTML = '<option value="">-- Tidak dimasukkan playlist --</option>' +
+      data.playlists.map(p => `<option value="${p.id}">${p.title} (${p.itemCount} video)</option>`).join('');
+  } catch(e) {
+    select.innerHTML = '<option value="">Gagal memuat playlist</option>';
+  }
+}
+
+async function createYtPlaylist(idx) {
+  const itemEl = document.querySelector(`.rotation-item[data-index="${idx}"]`);
+  if (!itemEl) return;
+  const titleInput = itemEl.querySelector('.yt-new-playlist-title');
+  const privacySelect = itemEl.querySelector('.yt-new-playlist-privacy');
+  const title = titleInput?.value?.trim();
+  if (!title) { showToast('warning', 'Masukkan nama playlist terlebih dahulu.'); return; }
+  const channelId = document.getElementById('rotationChannelId')?.value || '';
+  try {
+    const res = await fetch('/api/youtube/playlists', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
+      body: JSON.stringify({ title, privacy: privacySelect?.value || 'public', channelId })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('success', `Playlist "${data.playlist.title}" berhasil dibuat!`);
+      if (titleInput) titleInput.value = '';
+      await loadYtPlaylists(idx);
+      const select = itemEl.querySelector('.yt-playlist-select');
+      if (select && data.playlist.id) select.value = data.playlist.id;
+    } else {
+      showToast('error', data.error || 'Gagal membuat playlist.');
+    }
+  } catch(e) {
+    showToast('error', 'Gagal membuat playlist: ' + e.message);
+  }
+}
+
+// ── AI CHECKLIST FUNCTIONS ─────────────────────────────────────────────────
+function toggleAiChecklist(idx) {
+  const container = document.querySelector(`.rotation-item[data-index="${idx}"]`);
+  if (!container) return;
+  const section = container.querySelector('.ai-checklist-section');
+  const chevron = container.querySelector('.ai-checklist-chevron');
+  if (!section) return;
+  const isHidden = section.classList.contains('hidden');
+  section.classList.toggle('hidden');
+  if (chevron) chevron.style.transform = isHidden ? 'rotate(180deg)' : '';
+  if (isHidden) {
+    // Bind checkbox change events
+    section.querySelectorAll('.ai-check-item').forEach(cb => {
+      cb.addEventListener('change', () => updateAiChecklistProgress(idx));
+    });
+  }
+}
+
+function updateAiChecklistProgress(idx) {
+  const container = document.querySelector(`.rotation-item[data-index="${idx}"]`);
+  if (!container) return;
+  const items = container.querySelectorAll('.ai-check-item');
+  const checked = container.querySelectorAll('.ai-check-item:checked').length;
+  const total = items.length;
+  const progress = container.querySelector('.ai-checklist-progress');
+  const bar = container.querySelector('.ai-checklist-bar');
+  const badge = container.querySelector('.ai-check-badge');
+  if (progress) progress.textContent = `${checked}/${total} item diverifikasi`;
+  if (bar) bar.style.width = `${Math.round((checked / total) * 100)}%`;
+  if (badge) {
+    if (checked > 0) {
+      badge.classList.remove('hidden');
+      badge.textContent = `${checked}/${total}`;
+      badge.className = `ai-check-badge text-[10px] rounded-full px-1.5 py-0.5 font-medium ${checked === total ? 'bg-green-500 text-white' : 'bg-sky-500 text-white'}`;
+    } else {
+      badge.classList.add('hidden');
+    }
+  }
 }
 
 // ── RANDOM TITLE FUNCTIONS ─────────────────────────────────────────────────
