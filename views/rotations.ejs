@@ -31,10 +31,10 @@
 <form id="rotationForm" class="space-y-6">
   <input type="hidden" id="rotationId" name="rotationId" value="">
   
-  <div class="grid grid-cols-1 lg:grid-cols-5 gap-3 sm:gap-5" id="LiveTaskFormGrid">
+  <div class="flex flex-col lg:flex-row gap-3 sm:gap-5 w-full items-start" id="LiveTaskFormGrid">
     
     <!-- ========== LEFT COLUMN ========== -->
-    <div class="lg:col-span-3 space-y-3 sm:space-y-5">
+    <div class="w-full lg:w-[60%] space-y-3 sm:space-y-5 flex-shrink-0">
       <!-- StreamGeneralSettingsCard -->
       <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
          <div class="px-5 py-4 border-b border-slate-200/60 bg-slate-50/50">
@@ -201,7 +201,7 @@
     </div>
     
     <!-- ========== RIGHT COLUMN ========== -->
-    <div class="lg:col-span-2 space-y-3 sm:space-y-5">
+    <div class="w-full lg:w-[40%] space-y-3 sm:space-y-5 flex-shrink-0">
       <!-- ThumbnailSettingsCard -->
       <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
          <div class="px-5 py-3 border-b border-slate-200/60 bg-yellow-50/50">
