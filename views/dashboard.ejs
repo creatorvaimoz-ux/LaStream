@@ -1045,13 +1045,18 @@
     <!-- ========== RIGHT COLUMN ========== -->
     <div class="lg:col-span-2 space-y-3 sm:space-y-5">
 
-      <!-- 1. Jadwal / Live -->
       <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div class="px-4 sm:px-5 py-3 border-b border-slate-100 flex items-center gap-2">
-          <i class="ti ti-live-photo text-red-400"></i>
-          <h3 class="font-semibold text-slate-800 text-sm">Jadwal / Live</h3>
+        <div class="px-4 sm:px-5 py-3 border-b border-slate-100 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <i class="ti ti-live-photo text-red-400"></i>
+            <h3 class="font-semibold text-slate-800 text-sm">Jadwal / Live</h3>
+          </div>
+          <span id="pg-live-count" class="hidden items-center gap-1 text-[10px] font-semibold text-red-600 bg-red-50 border border-red-200 px-2 py-0.5 rounded-full">
+            <span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
+            <span id="pg-live-count-num">0</span> Live
+          </span>
         </div>
-        <div class="p-4 space-y-3">
+        <div class="p-3 space-y-2">
           <div class="flex gap-1 bg-slate-100 rounded-lg p-1">
             <button onclick="pgFilterStreams('all')"
               class="pg-tab-btn flex-1 px-2 py-1.5 rounded-md text-xs font-medium bg-primary text-white"
@@ -1066,26 +1071,8 @@
               class="pg-tab-btn flex-1 px-2 py-1.5 rounded-md text-xs font-medium text-slate-400 hover:text-slate-700"
               data-filter="offline">Offline</button>
           </div>
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="text-[10px] text-slate-500 block mb-1">Mode</label>
-              <select
-                class="w-full px-2 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 text-xs focus:border-primary">
-                <option>All Modes</option>
-                <option>RTMP</option>
-                <option>YouTube API</option>
-              </select>
-            </div>
-            <div>
-              <label class="text-[10px] text-slate-500 block mb-1">Channel</label>
-              <select
-                class="w-full px-2 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 text-xs focus:border-primary">
-                <option>All Channels</option>
-              </select>
-            </div>
-          </div>
-          <div id="pgStreamsList" class="space-y-2 max-h-[280px] overflow-y-auto">
-            <div class="text-center py-6"><i class="ti ti-loader animate-spin text-slate-500 text-xl"></i></div>
+          <div id="pgStreamsList" class="space-y-1.5 max-h-[320px] overflow-y-auto pr-0.5">
+            <div class="text-center py-6"><i class="ti ti-loader animate-spin text-slate-400 text-xl"></i></div>
           </div>
         </div>
       </div>
@@ -1338,23 +1325,74 @@
             return;
           }
           el.innerHTML = streams.map(s => {
-            const statusColors = { live: 'bg-red-500', scheduled: 'bg-yellow-500', offline: 'bg-slate-500' };
-            const statusLabels = { live: 'Live', scheduled: 'Scheduled', offline: 'Offline' };
-            return `<div class="flex items-center gap-3 p-2.5 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors">
-          <div class="w-2 h-2 rounded-full ${statusColors[s.status] || 'bg-slate-500'} flex-shrink-0"></div>
-          <div class="flex-1 min-w-0">
-            <p class="text-xs font-medium text-white truncate">${s.title || 'Untitled'}</p>
-            <p class="text-[10px] text-slate-500">${s.platform || 'Custom'} • ${statusLabels[s.status] || s.status}</p>
-          </div>
-          <div class="flex items-center gap-1 flex-shrink-0">
-            ${s.status === 'live'
-                ? `<button onclick="pgStopStream('${s.id}')" class="p-1 rounded hover:bg-red-500/20 text-red-400" title="Stop"><i class="ti ti-player-stop text-xs"></i></button>`
-                : `<button onclick="pgStartStream('${s.id}')" class="p-1 rounded hover:bg-green-500/20 text-green-400" title="Start"><i class="ti ti-player-play text-xs"></i></button>`
-              }
-            <button onclick="pgDeleteStream('${s.id}')" class="p-1 rounded hover:bg-red-500/20 text-slate-500 hover:text-red-400" title="Delete"><i class="ti ti-trash text-xs"></i></button>
-          </div>
-        </div>`;
+            // Indikator warna sesuai health/status
+            const isLive = s.status === 'live';
+            const isSched = s.status === 'scheduled';
+            const health = s.stream_health;
+
+            // Dot color
+            let dotClass = 'bg-slate-400';
+            let statusLabel = 'Offline';
+            let rowBg = 'bg-slate-50 hover:bg-slate-100';
+            if (isLive) {
+              rowBg = 'bg-green-50 hover:bg-green-100 border border-green-100';
+              statusLabel = 'Live';
+              if (health === 'red')    { dotClass = 'bg-red-500 animate-pulse'; statusLabel = 'Bermasalah'; }
+              else if (health === 'yellow') { dotClass = 'bg-yellow-400 animate-pulse'; statusLabel = 'Lambat'; }
+              else if (health === 'blue')   { dotClass = 'bg-blue-400 animate-pulse'; statusLabel = 'Connecting'; }
+              else                          { dotClass = 'bg-green-500 animate-pulse'; statusLabel = 'Lancar'; }
+            } else if (isSched) {
+              dotClass = 'bg-yellow-400';
+              statusLabel = 'Jadwal';
+              rowBg = 'bg-yellow-50/50 hover:bg-yellow-50';
+            }
+
+            // Viewer count (only for live)
+            const viewers = isLive && s.viewer_count != null ? `<span class="flex items-center gap-0.5 text-[9px] text-slate-500"><i class="ti ti-users text-[9px]"></i>${s.viewer_count}</span>` : '';
+
+            // Live duration
+            let durText = '';
+            if (isLive && s.live_duration_ms) {
+              const totalSec = Math.floor(s.live_duration_ms / 1000);
+              const h = Math.floor(totalSec / 3600);
+              const m = Math.floor((totalSec % 3600) / 60);
+              durText = h > 0 ? `${h}j${String(m).padStart(2,'0')}m` : `${m}m`;
+            }
+
+            return `<div class="flex items-center gap-2 p-2 ${rowBg} rounded-lg transition-colors">
+              <span class="w-2 h-2 rounded-full flex-shrink-0 ${dotClass}"></span>
+              <div class="flex-1 min-w-0">
+                <p class="text-xs font-medium text-slate-800 truncate leading-tight">${s.title || 'Untitled'}</p>
+                <div class="flex items-center gap-1.5 mt-0.5">
+                  <span class="text-[9px] text-slate-400">${s.platform || 'Custom'}</span>
+                  <span class="text-[9px] font-semibold ${isLive ? (health === 'red' ? 'text-red-500' : health === 'yellow' ? 'text-yellow-600' : 'text-green-600') : isSched ? 'text-yellow-600' : 'text-slate-400'}">${statusLabel}</span>
+                  ${durText ? `<span class="text-[9px] text-slate-400">${durText}</span>` : ''}
+                  ${viewers}
+                </div>
+              </div>
+              <div class="flex items-center gap-0.5 flex-shrink-0">
+                ${s.status === 'live'
+                  ? `<button onclick="pgStopStream('${s.id}')" class="p-1 rounded hover:bg-red-100 text-red-400" title="Stop"><i class="ti ti-player-stop text-xs"></i></button>`
+                  : `<button onclick="pgStartStream('${s.id}')" class="p-1 rounded hover:bg-green-100 text-green-500" title="Start"><i class="ti ti-player-play text-xs"></i></button>`
+                }
+                <button onclick="pgDeleteStream('${s.id}')" class="p-1 rounded hover:bg-red-100 text-slate-400 hover:text-red-400" title="Hapus"><i class="ti ti-trash text-xs"></i></button>
+              </div>
+            </div>`;
           }).join('');
+          // Update live count badge
+          const liveStreams = streams.filter(s => s.status === 'live');
+          const liveCountEl = document.getElementById('pg-live-count');
+          const liveCountNum = document.getElementById('pg-live-count-num');
+          if (liveCountEl && liveCountNum) {
+            if (liveStreams.length > 0) {
+              liveCountNum.textContent = liveStreams.length;
+              liveCountEl.classList.remove('hidden');
+              liveCountEl.classList.add('flex');
+            } else {
+              liveCountEl.classList.add('hidden');
+              liveCountEl.classList.remove('flex');
+            }
+          }
         } catch (e) { }
       }
 
