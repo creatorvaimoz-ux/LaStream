@@ -198,6 +198,25 @@
             </div>
          </div>
       </div>
+
+       <!-- JadwalPenjadwalCard (kolom kiri, paling bawah) -->
+       <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+         <div class="px-5 py-3 border-b border-slate-200/60 bg-teal-50/40 flex justify-between items-center">
+           <h3 class="text-sm font-semibold text-slate-800 flex items-center gap-2">
+             <i class="ti ti-calendar-event text-teal-500"></i> Jadwal Penjadwal
+             <span class="text-[10px] text-slate-400 font-normal">YouTube Channel / live stream akan otomatis dijadwalkan sesuai pengaturan diatas.</span>
+           </h3>
+           <label class="relative inline-flex items-center cursor-pointer">
+             <input type="checkbox" id="autoSchedulerToggle" class="sr-only peer">
+             <div class="w-9 h-5 bg-slate-200 rounded-full peer peer-checked:bg-teal-500"></div>
+             <div class="absolute left-[2px] top-[2px] w-4 h-4 bg-white rounded-full transition-all peer-checked:translate-x-4 shadow"></div>
+           </label>
+         </div>
+         <div class="p-4 text-center text-sm text-slate-400">
+           <i class="ti ti-calendar-off text-2xl mb-2 block text-slate-300"></i>
+           Belum ada jadwal aktif.
+         </div>
+       </div>
     </div>
     
     <!-- ========== RIGHT COLUMN ========== -->
@@ -383,24 +402,6 @@
       </div>
     </div>
   </div>
-<!-- JadwalPenjadwalCard -->
-<div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mt-4">
-  <div class="px-5 py-3 border-b border-slate-200/60 bg-teal-50/40 flex justify-between items-center">
-    <h3 class="text-sm font-semibold text-slate-800 flex items-center gap-2">
-      <i class="ti ti-calendar-event text-teal-500"></i> Jadwal Penjadwal
-      <span class="text-[10px] text-slate-400 font-normal">YouTube Channel / live stream akan otomatis dijadwalkan.</span>
-    </h3>
-    <label class="relative inline-flex items-center cursor-pointer">
-      <input type="checkbox" id="autoSchedulerToggle" class="sr-only peer">
-      <div class="w-9 h-5 bg-slate-200 rounded-full peer peer-checked:bg-teal-500"></div>
-      <div class="absolute left-[2px] top-[2px] w-4 h-4 bg-white rounded-full transition-all peer-checked:translate-x-4 shadow"></div>
-    </label>
-  </div>
-  <div class="p-4 text-center text-sm text-slate-400">
-    <i class="ti ti-calendar-off text-2xl mb-2 block text-slate-300"></i>
-    Belum ada jadwal aktif.
-  </div>
-</div>
 </form>
 
 
