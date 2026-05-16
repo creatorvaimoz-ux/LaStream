@@ -148,6 +148,76 @@
         </div>
       </div>
 
+      <!-- 4. Atur Penjadwal & Publish -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="px-4 sm:px-5 py-3 border-b border-slate-100 flex items-center gap-2">
+          <i class="ti ti-calendar-event text-violet-400"></i>
+          <h3 class="font-semibold text-slate-800 text-sm">Atur Penjadwal & Publish</h3>
+        </div>
+        <div class="p-4 sm:p-5 space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="text-xs text-slate-400 block mb-1">Jadwal Mulai</label>
+              <input type="datetime-local" id="pgStartTime"
+                class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 text-sm focus:border-primary focus:ring-1 focus:ring-primary [color-scheme:dark]">
+            </div>
+            <div>
+              <label class="text-xs text-slate-400 block mb-1">Jadwal Selesai</label>
+              <input type="datetime-local" id="pgEndTime"
+                class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 text-sm focus:border-primary focus:ring-1 focus:ring-primary [color-scheme:dark]">
+            </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="text-xs text-slate-400 block mb-1">Repeat Mode</label>
+              <select id="pgRepeatMode"
+                class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 text-sm focus:border-primary focus:ring-1 focus:ring-primary">
+                <option value="none">Tidak Diulang</option>
+                <option value="daily">Harian (setiap hari)</option>
+                <option value="weekly">Mingguan (setiap minggu)</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-xs text-slate-400 block mb-1">Penghenti Timer <span class="text-[10px] text-slate-500">(0 = tanpa batas)</span></label>
+              <div class="flex gap-2 items-center">
+                <div class="relative flex-1">
+                  <input type="number" id="pgStopHours" min="0" max="999" placeholder="0"
+                    class="w-full px-3 py-2 pr-10 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 text-sm focus:border-primary focus:ring-1 focus:ring-primary placeholder-slate-500">
+                  <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-[11px] text-slate-400 font-medium">Jam</span>
+                </div>
+                <span class="text-slate-400 font-bold text-sm flex-shrink-0">:</span>
+                <div class="relative flex-1">
+                  <input type="number" id="pgStopMinutes" min="0" max="59" placeholder="0"
+                    class="w-full px-3 py-2 pr-12 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 text-sm focus:border-primary focus:ring-1 focus:ring-primary placeholder-slate-500">
+                  <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-[11px] text-slate-400 font-medium">Menit</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <label class="flex items-center gap-2 text-xs text-slate-400 cursor-pointer">
+            <input type="checkbox" class="rounded border-slate-300 bg-white text-primary focus:ring-primary"> Auto
+            Publish saat jadwal mulai tercapai
+          </label>
+
+          <!-- Acak ±15 mnt (Anti-Spam) -->
+          <div class="bg-slate-50 rounded-lg p-4 border border-slate-200 space-y-3">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <i class="ti ti-dice-3 text-amber-400"></i>
+                <div>
+                  <span class="text-xs font-medium text-slate-800">Acak ±15 mnt (Anti-Spam)</span>
+                  <p class="text-[10px] text-slate-500 mt-0.5">Mengacak waktu mulai/selesai agar tidak terdeteksi spam
+                    oleh YouTube</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== RIGHT COLUMN ========== -->
+    <div class="lg:col-span-2 space-y-3 sm:space-y-5">
       <!-- NEW: Content AI Generator (VidIQ-style) -->
       <div id="pgSectionAI" class="bg-white rounded-xl border border-violet-200 shadow-sm overflow-hidden">
         <div class="px-4 sm:px-5 py-3 border-b border-violet-100 flex items-center justify-between cursor-pointer"
@@ -323,6 +393,136 @@
           </div>
         </div>
       </div>
+
+      <!-- NEW: Monetisasi -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="px-4 sm:px-5 py-3 border-b border-slate-100 flex items-center justify-between cursor-pointer"
+          onclick="document.getElementById('pgMonetSection').classList.toggle('hidden'); this.querySelector('.monet-chevron').classList.toggle('rotate-180')">
+          <div class="flex items-center gap-2">
+            <div class="w-6 h-6 rounded-lg bg-green-100 flex items-center justify-center">
+              <i class="ti ti-currency-dollar text-green-600 text-sm"></i>
+            </div>
+            <h3 class="font-semibold text-slate-800 text-sm">Monetisasi Stream</h3>
+          </div>
+          <i class="ti ti-chevron-down text-slate-400 monet-chevron transition-transform duration-200"></i>
+        </div>
+        <div id="pgMonetSection" class="p-4 sm:p-5 space-y-4 hidden">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <label class="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 cursor-pointer hover:border-green-300 transition-colors">
+              <div class="flex items-center gap-2">
+                <i class="ti ti-ad-2 text-green-500 text-base"></i>
+                <div>
+                  <div class="text-xs font-medium text-slate-700">Iklan (Ads)</div>
+                  <div class="text-[10px] text-slate-400">Enable monetization ads</div>
+                </div>
+              </div>
+              <div class="relative">
+                <input type="checkbox" id="pgEnableAds" class="sr-only peer">
+                <div class="w-9 h-5 bg-slate-300 rounded-full peer peer-checked:bg-green-500"></div>
+                <div class="absolute left-[2px] top-[2px] w-4 h-4 bg-white rounded-full transition-all peer-checked:translate-x-4"></div>
+              </div>
+            </label>
+            <label class="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 cursor-pointer hover:border-blue-300 transition-colors">
+              <div class="flex items-center gap-2">
+                <i class="ti ti-heart text-red-500 text-base"></i>
+                <div>
+                  <div class="text-xs font-medium text-slate-700">Super Chat & Sticker</div>
+                  <div class="text-[10px] text-slate-400">Allow super chat donations</div>
+                </div>
+              </div>
+              <div class="relative">
+                <input type="checkbox" id="pgEnableSuperChat" checked class="sr-only peer">
+                <div class="w-9 h-5 bg-slate-300 rounded-full peer peer-checked:bg-red-500"></div>
+                <div class="absolute left-[2px] top-[2px] w-4 h-4 bg-white rounded-full transition-all peer-checked:translate-x-4"></div>
+              </div>
+            </label>
+            <label class="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 cursor-pointer hover:border-amber-300 transition-colors">
+              <div class="flex items-center gap-2">
+                <i class="ti ti-brand-youtube text-amber-500 text-base"></i>
+                <div>
+                  <div class="text-xs font-medium text-slate-700">Channel Membership</div>
+                  <div class="text-[10px] text-slate-400">Members-only perks</div>
+                </div>
+              </div>
+              <div class="relative">
+                <input type="checkbox" id="pgEnableMembership" class="sr-only peer">
+                <div class="w-9 h-5 bg-slate-300 rounded-full peer peer-checked:bg-amber-500"></div>
+                <div class="absolute left-[2px] top-[2px] w-4 h-4 bg-white rounded-full transition-all peer-checked:translate-x-4"></div>
+              </div>
+            </label>
+            <label class="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 cursor-pointer hover:border-purple-300 transition-colors">
+              <div class="flex items-center gap-2">
+                <i class="ti ti-shopping-cart text-purple-500 text-base"></i>
+                <div>
+                  <div class="text-xs font-medium text-slate-700">Shopping / Merch</div>
+                  <div class="text-[10px] text-slate-400">YouTube Shopping shelf</div>
+                </div>
+              </div>
+              <div class="relative">
+                <input type="checkbox" id="pgEnableShopping" class="sr-only peer">
+                <div class="w-9 h-5 bg-slate-300 rounded-full peer peer-checked:bg-purple-500"></div>
+                <div class="absolute left-[2px] top-[2px] w-4 h-4 bg-white rounded-full transition-all peer-checked:translate-x-4"></div>
+              </div>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- NEW: VOD After Live -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="px-4 sm:px-5 py-3 border-b border-slate-100 flex items-center justify-between cursor-pointer"
+          onclick="document.getElementById('pgVodSection').classList.toggle('hidden'); this.querySelector('.vod-chevron').classList.toggle('rotate-180')">
+          <div class="flex items-center gap-2">
+            <div class="w-6 h-6 rounded-lg bg-sky-100 flex items-center justify-center">
+              <i class="ti ti-video-plus text-sky-600 text-sm"></i>
+            </div>
+            <h3 class="font-semibold text-slate-800 text-sm">VOD After Live <span class="text-[10px] bg-sky-100 text-sky-600 px-2 py-0.5 rounded-full font-medium ml-2">Setelah stream selesai</span></h3>
+          </div>
+          <i class="ti ti-chevron-down text-slate-400 vod-chevron transition-transform duration-200"></i>
+        </div>
+        <div id="pgVodSection" class="p-4 sm:p-5 space-y-4">
+          <p class="text-[11px] text-slate-400">Atur apa yang terjadi pada rekaman stream setelah live selesai.</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="text-xs text-slate-400 block mb-1">Visibilitas VOD</label>
+              <select id="pgVodPrivacy" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 text-sm focus:border-primary focus:ring-1 focus:ring-primary">
+                <option value="public">🌐 Public — Semua orang bisa lihat</option>
+                <option value="unlisted" selected>🔗 Unlisted — Hanya yang punya link</option>
+                <option value="private">🔒 Private — Hanya Anda</option>
+                <option value="delete">🗑️ Hapus otomatis</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-xs text-slate-400 block mb-1">Tunda Publish VOD</label>
+              <select id="pgVodDelay" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 text-sm focus:border-primary focus:ring-1 focus:ring-primary">
+                <option value="0">Langsung (segera setelah live)</option>
+                <option value="30">30 menit kemudian</option>
+                <option value="60">1 jam kemudian</option>
+                <option value="360">6 jam kemudian</option>
+                <option value="1440">24 jam kemudian</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <label class="flex items-center gap-2 text-xs text-slate-500 cursor-pointer bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5">
+              <input type="checkbox" id="pgVodChapter" checked class="rounded border-slate-300 text-primary">
+              <div>
+                <div class="font-medium text-slate-700">Auto Chapter</div>
+                <div class="text-[10px] text-slate-400">Bagi VOD ke chapter otomatis</div>
+              </div>
+            </label>
+            <label class="flex items-center gap-2 text-xs text-slate-500 cursor-pointer bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5">
+              <input type="checkbox" id="pgVodHighlight" class="rounded border-slate-300 text-primary">
+              <div>
+                <div class="font-medium text-slate-700">Auto Highlight Clip</div>
+                <div class="text-[10px] text-slate-400">Buat clip highlight otomatis</div>
+              </div>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
       <script>
         // AI State
@@ -583,11 +783,6 @@
 
         // Legacy alias
         function applyAI(type) { pgApplyAI(type); }
-      </script>
-
-      <!-- NEW: Monetisasi -->
-      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div class="px-4 sm:px-5 py-3 border-b border-slate-100 flex items-center justify-between cursor-pointer"
           onclick="document.getElementById('pgMonetSection').classList.toggle('hidden'); this.querySelector('.monet-chevron').classList.toggle('rotate-180')">
           <div class="flex items-center gap-2">
             <div class="w-6 h-6 rounded-lg bg-green-100 flex items-center justify-center">
@@ -719,58 +914,7 @@
 
 
 
-      <!-- 3.5. Dynamic Overlays & Watermarks -->
-      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden transition-opacity duration-300 relative">
-        <div class="px-4 sm:px-5 py-3 border-b border-slate-100 flex items-center gap-2 cursor-pointer"
-          onclick="document.getElementById('pgOverlaySection').classList.toggle('hidden')">
-          <i class="ti ti-layers-intersect text-pink-500"></i>
-          <h3 class="font-semibold text-slate-800 text-sm">Dynamic Overlays & Watermark (Opsional)</h3>
-          <i class="ti ti-chevron-down text-slate-400 ml-auto"></i>
-        </div>
-        <div id="pgOverlaySection" class="p-5 space-y-4 hidden">
-          <p class="text-[11px] text-amber-700 bg-amber-50 p-2.5 rounded-lg border border-amber-200 font-medium">
-            <i class="ti ti-alert-triangle text-amber-500 mr-1 text-sm align-text-bottom"></i> 
-            Mengaktifkan fitur ini akan memaksa stream menggunakan <b>Advanced Settings</b> (re-encoding H.264) yang membutuhkan CPU ekstra.
-          </p>
-          
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label class="text-xs font-medium text-slate-700 block mb-1">Logo Watermark (PNG Transparan)</label>
-              <div class="flex items-center gap-2">
-                <input type="file" id="pgWatermarkFile" accept="image/png" class="text-xs w-full p-1.5 border border-slate-300 rounded-lg bg-slate-50">
-                <button type="button" id="pgBtnUploadWatermark" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-colors">Upload</button>
-              </div>
-              <input type="hidden" id="pgWatermarkPath">
-              <p id="pgWatermarkStatus" class="text-[10px] text-green-600 mt-1 hidden"><i class="ti ti-check"></i> Watermark siap digunakan</p>
-            </div>
-            <div>
-              <label class="text-xs font-medium text-slate-700 block mb-1">Posisi Watermark</label>
-              <select id="pgWatermarkPosition" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 text-sm focus:border-primary focus:ring-1 focus:ring-primary">
-                <option value="top-right">Pojok Kanan Atas</option>
-                <option value="top-left">Pojok Kiri Atas</option>
-                <option value="bottom-right">Pojok Kanan Bawah</option>
-                <option value="bottom-left">Pojok Kiri Bawah</option>
-              </select>
-            </div>
-          </div>
 
-          <div class="border-t border-slate-100"></div>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label class="text-xs font-medium text-slate-700 block mb-1">Teks Overlay</label>
-              <input type="text" id="pgOverlayText" placeholder="Contoh: Jangan lupa Subscribe!" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 text-sm focus:border-primary focus:ring-1 focus:ring-primary">
-            </div>
-            <div>
-              <label class="text-xs font-medium text-slate-700 block mb-1">Tipe Teks</label>
-              <select id="pgOverlayTextType" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 text-sm focus:border-primary focus:ring-1 focus:ring-primary">
-                <option value="static">Statis (Menempel pada area watermark)</option>
-                <option value="marquee">Running Text (Bergerak di bawah layar)</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      </div>
 
       <!-- 4. Atur Penjadwal & Publish -->
       <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
@@ -910,50 +1054,7 @@
         </div>
       </div>
 
-      <!-- 5. YouTube Chatbot Terintegrasi -->
-      <div id="pgSectionChatbot" class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden transition-opacity duration-300 relative">
-        <!-- Manual mode overlay -->
-        <div id="pgChatbotOverlay" class="absolute inset-0 bg-white/60 z-10 hidden flex flex-col items-center justify-center backdrop-blur-[1px]">
-          <div class="bg-slate-800 text-white text-xs px-3 py-1.5 rounded-full mb-1">Mode Manual Aktif</div>
-          <p class="text-[10px] text-slate-600 font-medium">Pengaturan mengikuti YouTube Studio</p>
-        </div>
-        <div class="p-4 sm:p-5">
-          <div class="flex items-center justify-between mb-4">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                <i class="ti ti-robot text-xl text-emerald-600"></i>
-              </div>
-              <div>
-                <h3 class="font-semibold text-slate-800 text-sm">YouTube Chatbot Terintegrasi</h3>
-                <p class="text-xs text-slate-500">Pesan otomatis di Live Chat</p>
-              </div>
-            </div>
-            <label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
-              <input type="checkbox" id="pgEnableChatbot" checked class="sr-only peer">
-              <div class="w-11 h-6 bg-slate-300 rounded-full peer peer-checked:bg-emerald-500 transition-colors"></div>
-              <div class="absolute left-[2px] top-[2px] w-5 h-5 bg-white rounded-full transition-transform peer-checked:translate-x-5 shadow-sm"></div>
-            </label>
-          </div>
-          
-          <div class="border-t border-slate-100 pt-4" id="pgChatbotSection">
-            <div class="flex items-center justify-between mb-3">
-              <div class="flex items-center gap-1.5">
-                <i class="ti ti-clock text-slate-400"></i>
-                <span class="text-xs font-semibold text-slate-700">Timeline Pesan Bot</span>
-              </div>
-              <button type="button" onclick="pgAddChatbotTimeline()" class="text-xs text-emerald-600 hover:text-emerald-700 font-medium transition-colors">
-                + Tambah Jadwal
-              </button>
-            </div>
-            
-            <div id="pgChatbotList" class="space-y-2">
-              <div id="pgChatbotEmpty" class="border border-dashed border-slate-300 bg-slate-50 rounded-lg py-5 text-center">
-                <p class="text-xs text-slate-500">Belum ada jadwal pesan bot.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+
 
     </div>
 
@@ -1043,7 +1144,280 @@
     </script>
 
     <!-- ========== RIGHT COLUMN ========== -->
-    <div class="lg:col-span-2 space-y-3 sm:space-y-5 lg:sticky lg:top-20 self-start">
+    <div class="lg:col-span-2 space-y-3 sm:space-y-5">
+      <!-- NEW: Content AI Generator (VidIQ-style) -->
+      <div id="pgSectionAI" class="bg-white rounded-xl border border-violet-200 shadow-sm overflow-hidden">
+        <div class="px-4 sm:px-5 py-3 border-b border-violet-100 flex items-center justify-between cursor-pointer"
+          onclick="document.getElementById('pgAISection').classList.toggle('hidden'); this.querySelector('.ai-chevron').classList.toggle('rotate-180')">
+          <div class="flex items-center gap-2">
+            <div class="w-6 h-6 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
+              <i class="ti ti-sparkles text-white text-sm"></i>
+            </div>
+            <h3 class="font-semibold text-slate-800 text-sm">Content AI</h3>
+            <span class="text-[10px] bg-violet-100 text-violet-600 px-2 py-0.5 rounded-full font-medium">VidIQ-style</span>
+          </div>
+          <i class="ti ti-chevron-up text-violet-400 ai-chevron transition-transform duration-200"></i>
+        </div>
+        <div id="pgAISection" class="p-4 sm:p-5 space-y-4">
+          <!-- Provider Selector -->
+          <div class="flex gap-2">
+            <button type="button" id="pgAIProviderGemini" onclick="pgSelectProvider('gemini')"
+              class="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border-2 border-violet-500 bg-violet-50 text-violet-700 text-xs font-semibold transition-all">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+              Gemini
+            </button>
+            <button type="button" id="pgAIProviderOpenAI" onclick="pgSelectProvider('openai')"
+              class="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border-2 border-slate-200 bg-white text-slate-500 text-xs font-semibold transition-all hover:border-slate-300">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
+              ChatGPT
+            </button>
+          </div>
+          <!-- Alert jika belum set API key -->
+          <div id="pgAINoKey" class="hidden bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-start gap-2">
+            <i class="ti ti-alert-triangle text-amber-500 mt-0.5 flex-shrink-0"></i>
+            <p class="text-amber-700 text-xs">API Key belum dikonfigurasi. <a href="/settings" class="font-semibold underline">Buka Settings → AI Generator</a> untuk mengatur.</p>
+          </div>
+          <!-- Prompt Input -->
+          <div>
+            <label class="text-xs text-slate-400 block mb-1">Topik / Konteks Stream <span class="text-violet-500">*</span></label>
+            <input type="text" id="pgAIPrompt" placeholder="Contoh: Mountain River Waterfall, Live musik Jazz malam, Tutorial Python..."
+              class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 text-sm focus:border-violet-400 focus:ring-1 focus:ring-violet-400 placeholder-slate-400"
+              onkeydown="if(event.key==='Enter') generateAIContent()">
+          </div>
+
+          <!-- Competitor Reference Title (collapsible) -->
+          <div>
+            <button type="button" onclick="pgToggleRefTitle()" class="flex items-center gap-1.5 text-[11px] text-violet-500 hover:text-violet-700 font-medium">
+              <i class="ti ti-brand-youtube text-[12px]"></i>
+              <span id="pgRefTitleToggleText">+ Tambah Judul Referensi Kompetitor</span>
+            </button>
+            <div id="pgRefTitleBox" class="hidden mt-1.5">
+              <label class="text-xs text-slate-400 block mb-1">Judul Kompetitor <span class="text-[10px] text-slate-400">(opsional — AI akan analisis & tiru pola judul ini)</span></label>
+              <textarea id="pgAIRefTitle" rows="2"
+                placeholder="Contoh: Mountain River Waterfall Flowing 24/7. Water Sounds, Nature White Noise. River Sounds for Sleeping."
+                class="w-full px-3 py-2 bg-orange-50 border border-orange-200 rounded-lg text-slate-700 text-xs focus:border-orange-400 focus:ring-1 focus:ring-orange-400 placeholder-slate-400 resize-none"></textarea>
+              <p class="text-[10px] text-slate-400 mt-0.5">💡 AI akan analisis pola kata kunci, struktur, & panjang judul kompetitor lalu buat variasi yang lebih baik.</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <div>
+              <label class="text-xs text-slate-400 block mb-1">Bahasa</label>
+              <select id="pgAILanguage" class="w-full px-2 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 text-xs focus:border-violet-400">
+                <option value="auto">🌐 Auto Detect</option>
+                <option value="id">🇮🇩 Indonesia</option>
+                <option value="en">🇺🇸 English</option>
+                <option value="es">🇪🇸 Spanish</option>
+                <option value="ja">🇯🇵 Japanese</option>
+                <option value="ko">🇰🇷 Korean</option>
+                <option value="hi">🇮🇳 Hindi</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-xs text-slate-400 block mb-1">Gaya</label>
+              <select id="pgAIStyle" class="w-full px-2 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 text-xs focus:border-violet-400">
+                <option value="casual">😄 Santai</option>
+                <option value="professional">💼 Profesional</option>
+                <option value="clickbait">🔥 Viral</option>
+                <option value="educational">📚 Edukatif</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-xs text-slate-400 block mb-1">Jumlah Judul</label>
+              <select id="pgAITitleCount" class="w-full px-2 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 text-xs focus:border-violet-400">
+                <option value="3" selected>3 Variasi</option>
+                <option value="5">5 Variasi</option>
+                <option value="7">7 Variasi</option>
+                <option value="10">10 Variasi</option>
+              </select>
+            </div>
+          </div>
+          <button type="button" id="pgAIGenerate" onclick="generateAIContent()"
+            class="w-full px-4 py-2.5 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white rounded-lg text-sm font-semibold transition-all flex items-center justify-center gap-2 shadow-sm">
+            <i class="ti ti-sparkles" id="pgAIBtnIcon"></i>
+            <span id="pgAIBtnText">✨ Generate dengan AI</span>
+
+          </button>
+
+          <!-- AI Result Panel (VidIQ-style) -->
+          <div id="pgAIResult" class="hidden space-y-4 border-t border-violet-100 pt-4">
+            <!-- SEO Score -->
+            <div class="bg-gradient-to-r from-violet-50 to-purple-50 border border-violet-200 rounded-xl p-3">
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-2">
+                  <i class="ti ti-chart-bar text-violet-600"></i>
+                  <span class="text-xs font-bold text-violet-700">SEO Score</span>
+                </div>
+                <div class="flex items-center gap-1">
+                  <span id="pgAISeoScore" class="text-2xl font-black text-violet-700">--</span>
+                  <span class="text-xs text-violet-500">/100</span>
+                </div>
+              </div>
+              <div class="w-full bg-violet-200 rounded-full h-2 mb-2">
+                <div id="pgAISeoBar" class="h-2 rounded-full transition-all duration-700 bg-gradient-to-r from-violet-500 to-purple-500" style="width:0%"></div>
+              </div>
+              <div id="pgAISeoTips" class="space-y-1"></div>
+            </div>
+
+            <!-- Research Analysis -->
+            <div id="pgAIResearchPanel" class="hidden bg-indigo-50 border border-indigo-200 rounded-xl p-3">
+              <div class="flex items-center gap-2 mb-2">
+                <i class="ti ti-microscope text-indigo-600"></i>
+                <span class="text-xs font-bold text-indigo-800">Analisis Riset YouTube</span>
+              </div>
+              <p id="pgAIResearchText" class="text-[11px] text-indigo-700 leading-relaxed"></p>
+            </div>
+
+            <!-- Title Variants -->
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <label class="text-xs font-semibold text-slate-700 flex items-center gap-1">
+                  <i class="ti ti-text-size text-violet-500"></i> Variasi Judul
+                </label>
+                <span class="text-[10px] text-slate-400">Klik untuk pilih</span>
+              </div>
+              <div id="pgAITitlesContainer" class="space-y-2"></div>
+            </div>
+
+            <!-- Description -->
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <label class="text-xs font-semibold text-slate-700 flex items-center gap-1">
+                  <i class="ti ti-align-left text-violet-500"></i> Deskripsi SEO
+                </label>
+                <button type="button" onclick="pgApplyAI('desc')" class="text-[10px] text-violet-600 hover:text-violet-800 font-semibold flex items-center gap-1 hover:underline">
+                  Terapkan <i class="ti ti-arrow-right text-[10px]"></i>
+                </button>
+              </div>
+              <div id="pgAIDesc" class="w-full px-3 py-2.5 bg-violet-50 border border-violet-200 rounded-lg text-slate-700 text-xs min-h-[70px] whitespace-pre-wrap leading-relaxed"></div>
+            </div>
+
+            <!-- Tags Pill -->
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <label class="text-xs font-semibold text-slate-700 flex items-center gap-1">
+                  <i class="ti ti-tags text-violet-500"></i> Tags <span id="pgAITagCount" class="text-[10px] text-slate-400"></span>
+                </label>
+                <button type="button" onclick="pgApplyAI('tags')" class="text-[10px] text-violet-600 hover:text-violet-800 font-semibold flex items-center gap-1 hover:underline">
+                  Terapkan <i class="ti ti-arrow-right text-[10px]"></i>
+                </button>
+              </div>
+              <div id="pgAITagsContainer" class="flex flex-wrap gap-1.5 mb-2"></div>
+              <div id="pgAITagLegend" class="flex flex-wrap items-center gap-2 mt-1"></div>
+            </div>
+
+            <!-- Apply All Button -->
+            <button type="button" onclick="pgApplyAI('all')"
+              class="w-full px-4 py-2.5 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2 shadow-md">
+              <i class="ti ti-check"></i> Terapkan Semua ke Form
+            </button>
+          </div>
+
+          <!-- Error Panel -->
+          <div id="pgAIError" class="hidden bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2">
+            <i class="ti ti-alert-circle text-red-500 mt-0.5 flex-shrink-0"></i>
+            <p id="pgAIErrorMsg" class="text-red-700 text-xs"></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3.5. Dynamic Overlays & Watermarks -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden transition-opacity duration-300 relative">
+        <div class="px-4 sm:px-5 py-3 border-b border-slate-100 flex items-center gap-2 cursor-pointer"
+          onclick="document.getElementById('pgOverlaySection').classList.toggle('hidden')">
+          <i class="ti ti-layers-intersect text-pink-500"></i>
+          <h3 class="font-semibold text-slate-800 text-sm">Dynamic Overlays & Watermark (Opsional)</h3>
+          <i class="ti ti-chevron-down text-slate-400 ml-auto"></i>
+        </div>
+        <div id="pgOverlaySection" class="p-5 space-y-4 hidden">
+          <p class="text-[11px] text-amber-700 bg-amber-50 p-2.5 rounded-lg border border-amber-200 font-medium">
+            <i class="ti ti-alert-triangle text-amber-500 mr-1 text-sm align-text-bottom"></i> 
+            Mengaktifkan fitur ini akan memaksa stream menggunakan <b>Advanced Settings</b> (re-encoding H.264) yang membutuhkan CPU ekstra.
+          </p>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="text-xs font-medium text-slate-700 block mb-1">Logo Watermark (PNG Transparan)</label>
+              <div class="flex items-center gap-2">
+                <input type="file" id="pgWatermarkFile" accept="image/png" class="text-xs w-full p-1.5 border border-slate-300 rounded-lg bg-slate-50">
+                <button type="button" id="pgBtnUploadWatermark" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-colors">Upload</button>
+              </div>
+              <input type="hidden" id="pgWatermarkPath">
+              <p id="pgWatermarkStatus" class="text-[10px] text-green-600 mt-1 hidden"><i class="ti ti-check"></i> Watermark siap digunakan</p>
+            </div>
+            <div>
+              <label class="text-xs font-medium text-slate-700 block mb-1">Posisi Watermark</label>
+              <select id="pgWatermarkPosition" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 text-sm focus:border-primary focus:ring-1 focus:ring-primary">
+                <option value="top-right">Pojok Kanan Atas</option>
+                <option value="top-left">Pojok Kiri Atas</option>
+                <option value="bottom-right">Pojok Kanan Bawah</option>
+                <option value="bottom-left">Pojok Kiri Bawah</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="border-t border-slate-100"></div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="text-xs font-medium text-slate-700 block mb-1">Teks Overlay</label>
+              <input type="text" id="pgOverlayText" placeholder="Contoh: Jangan lupa Subscribe!" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 text-sm focus:border-primary focus:ring-1 focus:ring-primary">
+            </div>
+            <div>
+              <label class="text-xs font-medium text-slate-700 block mb-1">Tipe Teks</label>
+              <select id="pgOverlayTextType" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 text-sm focus:border-primary focus:ring-1 focus:ring-primary">
+                <option value="static">Statis (Menempel pada area watermark)</option>
+                <option value="marquee">Running Text (Bergerak di bawah layar)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. YouTube Chatbot Terintegrasi -->
+      <div id="pgSectionChatbot" class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden transition-opacity duration-300 relative">
+        <!-- Manual mode overlay -->
+        <div id="pgChatbotOverlay" class="absolute inset-0 bg-white/60 z-10 hidden flex flex-col items-center justify-center backdrop-blur-[1px]">
+          <div class="bg-slate-800 text-white text-xs px-3 py-1.5 rounded-full mb-1">Mode Manual Aktif</div>
+          <p class="text-[10px] text-slate-600 font-medium">Pengaturan mengikuti YouTube Studio</p>
+        </div>
+        <div class="p-4 sm:p-5">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                <i class="ti ti-robot text-xl text-emerald-600"></i>
+              </div>
+              <div>
+                <h3 class="font-semibold text-slate-800 text-sm">YouTube Chatbot Terintegrasi</h3>
+                <p class="text-xs text-slate-500">Pesan otomatis di Live Chat</p>
+              </div>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
+              <input type="checkbox" id="pgEnableChatbot" checked class="sr-only peer">
+              <div class="w-11 h-6 bg-slate-300 rounded-full peer peer-checked:bg-emerald-500 transition-colors"></div>
+              <div class="absolute left-[2px] top-[2px] w-5 h-5 bg-white rounded-full transition-transform peer-checked:translate-x-5 shadow-sm"></div>
+            </label>
+          </div>
+          
+          <div class="border-t border-slate-100 pt-4" id="pgChatbotSection">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-1.5">
+                <i class="ti ti-clock text-slate-400"></i>
+                <span class="text-xs font-semibold text-slate-700">Timeline Pesan Bot</span>
+              </div>
+              <button type="button" onclick="pgAddChatbotTimeline()" class="text-xs text-emerald-600 hover:text-emerald-700 font-medium transition-colors">
+                + Tambah Jadwal
+              </button>
+            </div>
+            
+            <div id="pgChatbotList" class="space-y-2">
+              <div id="pgChatbotEmpty" class="border border-dashed border-slate-300 bg-slate-50 rounded-lg py-5 text-center">
+                <p class="text-xs text-slate-500">Belum ada jadwal pesan bot.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         <div class="px-4 sm:px-5 py-3 border-b border-slate-100 flex items-center justify-between">
@@ -1261,11 +1635,108 @@
           </label>
         </div>
         <div class="p-5 space-y-3">
-          <p class="text-xs text-slate-400">YouTube Channel / live stream akan otomatis dijadwalkan sesuai pengaturan
-            diatas.</p>
+          <p class="text-xs text-slate-400">YouTube Channel / live stream akan otomatis dijadwalkan sesuai pengaturan diatas.</p>
           <div class="bg-slate-50 rounded-lg p-3 text-center text-xs text-slate-500">
             <i class="ti ti-calendar-off text-lg mb-1"></i>
             <p>Belum ada jadwal aktif</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3.5. Dynamic Overlays & Watermarks -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden transition-opacity duration-300 relative">
+        <div class="px-4 sm:px-5 py-3 border-b border-slate-100 flex items-center gap-2 cursor-pointer"
+          onclick="document.getElementById('pgOverlaySection').classList.toggle('hidden')">
+          <i class="ti ti-layers-intersect text-pink-500"></i>
+          <h3 class="font-semibold text-slate-800 text-sm">Dynamic Overlays & Watermark (Opsional)</h3>
+          <i class="ti ti-chevron-down text-slate-400 ml-auto"></i>
+        </div>
+        <div id="pgOverlaySection" class="p-5 space-y-4 hidden">
+          <p class="text-[11px] text-amber-700 bg-amber-50 p-2.5 rounded-lg border border-amber-200 font-medium">
+            <i class="ti ti-alert-triangle text-amber-500 mr-1 text-sm align-text-bottom"></i> 
+            Mengaktifkan fitur ini akan memaksa stream menggunakan <b>Advanced Settings</b> (re-encoding H.264) yang membutuhkan CPU ekstra.
+          </p>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="text-xs font-medium text-slate-700 block mb-1">Logo Watermark (PNG Transparan)</label>
+              <div class="flex items-center gap-2">
+                <input type="file" id="pgWatermarkFile" accept="image/png" class="text-xs w-full p-1.5 border border-slate-300 rounded-lg bg-slate-50">
+                <button type="button" id="pgBtnUploadWatermark" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-colors">Upload</button>
+              </div>
+              <input type="hidden" id="pgWatermarkPath">
+              <p id="pgWatermarkStatus" class="text-[10px] text-green-600 mt-1 hidden"><i class="ti ti-check"></i> Watermark siap digunakan</p>
+            </div>
+            <div>
+              <label class="text-xs font-medium text-slate-700 block mb-1">Posisi Watermark</label>
+              <select id="pgWatermarkPosition" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 text-sm focus:border-primary focus:ring-1 focus:ring-primary">
+                <option value="top-right">Pojok Kanan Atas</option>
+                <option value="top-left">Pojok Kiri Atas</option>
+                <option value="bottom-right">Pojok Kanan Bawah</option>
+                <option value="bottom-left">Pojok Kiri Bawah</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="border-t border-slate-100"></div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="text-xs font-medium text-slate-700 block mb-1">Teks Overlay</label>
+              <input type="text" id="pgOverlayText" placeholder="Contoh: Jangan lupa Subscribe!" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 text-sm focus:border-primary focus:ring-1 focus:ring-primary">
+            </div>
+            <div>
+              <label class="text-xs font-medium text-slate-700 block mb-1">Tipe Teks</label>
+              <select id="pgOverlayTextType" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 text-sm focus:border-primary focus:ring-1 focus:ring-primary">
+                <option value="static">Statis (Menempel pada area watermark)</option>
+                <option value="marquee">Running Text (Bergerak di bawah layar)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. YouTube Chatbot Terintegrasi -->
+      <div id="pgSectionChatbot" class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden transition-opacity duration-300 relative">
+        <!-- Manual mode overlay -->
+        <div id="pgChatbotOverlay" class="absolute inset-0 bg-white/60 z-10 hidden flex flex-col items-center justify-center backdrop-blur-[1px]">
+          <div class="bg-slate-800 text-white text-xs px-3 py-1.5 rounded-full mb-1">Mode Manual Aktif</div>
+          <p class="text-[10px] text-slate-600 font-medium">Pengaturan mengikuti YouTube Studio</p>
+        </div>
+        <div class="p-4 sm:p-5">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                <i class="ti ti-robot text-xl text-emerald-600"></i>
+              </div>
+              <div>
+                <h3 class="font-semibold text-slate-800 text-sm">YouTube Chatbot Terintegrasi</h3>
+                <p class="text-xs text-slate-500">Pesan otomatis di Live Chat</p>
+              </div>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
+              <input type="checkbox" id="pgEnableChatbot" checked class="sr-only peer">
+              <div class="w-11 h-6 bg-slate-300 rounded-full peer peer-checked:bg-emerald-500 transition-colors"></div>
+              <div class="absolute left-[2px] top-[2px] w-5 h-5 bg-white rounded-full transition-transform peer-checked:translate-x-5 shadow-sm"></div>
+            </label>
+          </div>
+          
+          <div class="border-t border-slate-100 pt-4" id="pgChatbotSection">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-1.5">
+                <i class="ti ti-clock text-slate-400"></i>
+                <span class="text-xs font-semibold text-slate-700">Timeline Pesan Bot</span>
+              </div>
+              <button type="button" onclick="pgAddChatbotTimeline()" class="text-xs text-emerald-600 hover:text-emerald-700 font-medium transition-colors">
+                + Tambah Jadwal
+              </button>
+            </div>
+            
+            <div id="pgChatbotList" class="space-y-2">
+              <div id="pgChatbotEmpty" class="border border-dashed border-slate-300 bg-slate-50 rounded-lg py-5 text-center">
+                <p class="text-xs text-slate-500">Belum ada jadwal pesan bot.</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
