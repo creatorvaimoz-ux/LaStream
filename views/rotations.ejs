@@ -39,13 +39,38 @@
       <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
          <div class="px-5 py-4 border-b border-slate-200/60 bg-slate-50/50">
             <h3 class="text-sm font-semibold text-slate-800 flex items-center gap-2">
-               <i class="ti ti-settings text-primary"></i> 1. Pengaturan Stream Umum
+               <i class="ti ti-settings text-primary"></i> Pengaturan Stream Umum
             </h3>
          </div>
          <div class="p-5 space-y-4">
             <div>
-              <label class="text-sm font-medium text-slate-800 block mb-2">Nama Tugas Live (Rotation Name)</label>
+              <label class="text-sm font-medium text-slate-800 block mb-2">Nama Tugas Live</label>
               <input type="text" id="rotationName" name="rotationName" class="w-full px-4 py-2.5 bg-slate-100 border border-slate-300 rounded-lg focus:border-primary focus:ring-1 focus:ring-primary" placeholder="Contoh: Lo-fi Jazz Stream" required>
+            </div>
+            
+            <div>
+              <label class="text-sm font-medium text-slate-800 block mb-2">Pilih Video <span class="text-xs text-slate-500 font-normal">(Bisa pilih > 1 untuk acak, gunakan Ctrl/Cmd)</span></label>
+              <select id="globalVideos" name="globalVideos" multiple class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:border-primary focus:ring-1 focus:ring-primary h-32 text-sm">
+                <!-- Will be populated by JS -->
+              </select>
+            </div>
+            
+            <div>
+              <label class="text-sm font-medium text-slate-800 block mb-2">Jenis Jalur Keluaran</label>
+              <select id="outputMode" class="w-full px-4 py-2.5 bg-slate-100 border border-slate-300 rounded-lg focus:border-primary focus:ring-1 focus:ring-primary">
+                <option value="api">YouTube API v3 [Auto]</option>
+                <option value="rtmp">RTMP Manual</option>
+              </select>
+            </div>
+            
+            <div class="flex items-start gap-2">
+              <input type="checkbox" id="loopVideos" checked class="mt-1 w-4 h-4 text-primary border-slate-300 rounded focus:ring-primary">
+              <label for="loopVideos" class="text-sm text-slate-700">Video di-loop terus menerus selama jadwal aktif</label>
+            </div>
+            
+            <div class="p-3 bg-blue-50 text-blue-800 rounded-lg text-xs flex gap-2 items-start">
+              <i class="ti ti-info-circle text-lg mt-0.5"></i>
+              <p>Mode API: Isi cukup detail dibawah dan YouTube Studio akan mengatur broadcast key secara otomatis. Pastikan terhubung ke YouTube di menu Settings -> Integrasi & akun.</p>
             </div>
          </div>
       </div>
@@ -54,44 +79,57 @@
       <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
          <div class="px-5 py-4 border-b border-slate-200/60 bg-slate-50/50">
             <h3 class="text-sm font-semibold text-slate-800 flex items-center gap-2">
-               <i class="ti ti-brand-youtube text-red-500"></i> 2. Metadata YouTube Studio
+               <i class="ti ti-brand-youtube text-red-500"></i> Metadata YouTube Studio
             </h3>
          </div>
          <div class="p-5 space-y-4">
-            <div>
-              <label class="text-sm font-medium text-slate-800 block mb-2">Pilih Channel YouTube</label>
-              <div class="relative" id="rotationChannelSelector">
-                <button type="button" onclick="toggleRotationChannelDropdown()" class="w-full flex items-center gap-3 px-3 py-2.5 bg-slate-100 border border-slate-300 rounded-lg hover:border-slate-300 focus:border-primary focus:ring-1 focus:ring-primary transition-colors text-left">
-                  <img id="rotationChannelThumb" src="<%= typeof youtubeChannels !== 'undefined' && youtubeChannels.length > 0 ? (youtubeChannels.find(c => c.is_default) || youtubeChannels[0]).channel_thumbnail : '' %>" alt="" class="w-6 h-6 rounded-full object-cover flex-shrink-0" onerror="this.src='/images/default-avatar.jpg'">
-                  <span id="rotationChannelName" class="flex-1 text-sm text-slate-800 truncate"><%= typeof youtubeChannels !== 'undefined' && youtubeChannels.length > 0 ? (youtubeChannels.find(c => c.is_default) || youtubeChannels[0]).channel_name : 'Select Channel' %></span>
-                  <i class="ti ti-chevron-down text-slate-500 flex-shrink-0"></i>
-                </button>
-                <div id="rotationChannelDropdown" class="hidden absolute z-30 mt-1 w-full bg-slate-100 border border-slate-300 rounded-lg shadow-lg overflow-hidden">
-                  <% if (typeof youtubeChannels !== 'undefined' && youtubeChannels.length > 0) { %>
-                    <% youtubeChannels.forEach(function(channel) { %>
-                    <button type="button" onclick="selectRotationChannel('<%= channel.id %>', '<%= channel.channel_name %>', '<%= channel.channel_thumbnail %>')" class="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-slate-200 text-left rotation-channel-option" data-channel-id="<%= channel.id %>">
-                      <img src="<%= channel.channel_thumbnail %>" alt="" class="w-6 h-6 rounded-full object-cover flex-shrink-0" onerror="this.src='/images/default-channel.png'">
-                      <span class="text-sm text-slate-800 truncate"><%= channel.channel_name %></span>
-                    </button>
-                    <% }); %>
-                  <% } %>
-                </div>
-                <input type="hidden" id="rotationChannelId" name="rotationChannelId" value="<%= typeof youtubeChannels !== 'undefined' && youtubeChannels.length > 0 ? (youtubeChannels.find(c => c.is_default) || youtubeChannels[0]).id : '' %>">
-              </div>
-            </div>
-            
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label class="text-sm font-medium text-slate-800 block mb-2">Privasi Global</label>
-                <select id="globalPrivacy" name="globalPrivacy" class="w-full px-4 py-2.5 bg-slate-100 border border-slate-300 rounded-lg focus:border-primary focus:ring-1 focus:ring-primary">
+                <label class="text-sm font-medium text-slate-800 block mb-2">Pilih Channel</label>
+                <div class="relative" id="rotationChannelSelector">
+                  <button type="button" onclick="toggleRotationChannelDropdown()" class="w-full flex items-center gap-3 px-3 py-2 bg-slate-100 border border-slate-300 rounded-lg hover:border-slate-300 focus:border-primary focus:ring-1 focus:ring-primary transition-colors text-left">
+                    <img id="rotationChannelThumb" src="<%= typeof youtubeChannels !== 'undefined' && youtubeChannels.length > 0 ? (youtubeChannels.find(c => c.is_default) || youtubeChannels[0]).channel_thumbnail : '' %>" alt="" class="w-6 h-6 rounded-full object-cover flex-shrink-0" onerror="this.src='/images/default-avatar.jpg'">
+                    <span id="rotationChannelName" class="flex-1 text-sm text-slate-800 truncate"><%= typeof youtubeChannels !== 'undefined' && youtubeChannels.length > 0 ? (youtubeChannels.find(c => c.is_default) || youtubeChannels[0]).channel_name : 'Select Channel' %></span>
+                    <i class="ti ti-chevron-down text-slate-500 flex-shrink-0"></i>
+                  </button>
+                  <div id="rotationChannelDropdown" class="hidden absolute z-30 mt-1 w-full bg-slate-100 border border-slate-300 rounded-lg shadow-lg overflow-hidden">
+                    <% if (typeof youtubeChannels !== 'undefined' && youtubeChannels.length > 0) { %>
+                      <% youtubeChannels.forEach(function(channel) { %>
+                      <button type="button" onclick="selectRotationChannel('<%= channel.id %>', '<%= channel.channel_name %>', '<%= channel.channel_thumbnail %>')" class="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-slate-200 text-left rotation-channel-option" data-channel-id="<%= channel.id %>">
+                        <img src="<%= channel.channel_thumbnail %>" alt="" class="w-6 h-6 rounded-full object-cover flex-shrink-0" onerror="this.src='/images/default-channel.png'">
+                        <span class="text-sm text-slate-800 truncate"><%= channel.channel_name %></span>
+                      </button>
+                      <% }); %>
+                    <% } %>
+                  </div>
+                  <input type="hidden" id="rotationChannelId" name="rotationChannelId" value="<%= typeof youtubeChannels !== 'undefined' && youtubeChannels.length > 0 ? (youtubeChannels.find(c => c.is_default) || youtubeChannels[0]).id : '' %>">
+                </div>
+              </div>
+              <div>
+                <label class="text-sm font-medium text-slate-800 block mb-2">Ketersediaan</label>
+                <select id="globalPrivacy" name="globalPrivacy" class="w-full px-4 py-2 bg-slate-100 border border-slate-300 rounded-lg focus:border-primary focus:ring-1 focus:ring-primary">
                   <option value="public">Public</option>
                   <option value="unlisted" selected>Unlisted</option>
                   <option value="private">Private</option>
                 </select>
               </div>
+            </div>
+            
+            <div>
+              <label class="text-sm font-medium text-slate-800 block mb-2">Judul Video untuk YouTube <span class="text-xs text-slate-500 font-normal">(Tulis satu baris satu judul untuk diacak)</span></label>
+              <textarea id="globalTitles" class="w-full px-4 py-2 bg-slate-100 border border-slate-300 rounded-lg focus:border-primary focus:ring-1 focus:ring-primary h-24 text-sm" placeholder="Contoh:&#10;Morning Jazz Relaxing Music 24/7&#10;Cafe Jazz Piano - Chill Background Music"></textarea>
+              <p class="text-[10px] text-slate-500 mt-1">Jika lebih dari 1 baris, judul akan dipilih secara acak saat live dimulai.</p>
+            </div>
+            
+            <div>
+              <label class="text-sm font-medium text-slate-800 block mb-2">Deskripsi</label>
+              <textarea id="globalDescription" class="w-full px-4 py-2 bg-slate-100 border border-slate-300 rounded-lg focus:border-primary focus:ring-1 focus:ring-primary h-24 text-sm" placeholder="Deskripsi untuk video YouTube..."></textarea>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label class="text-sm font-medium text-slate-800 block mb-2">Kategori Global</label>
-                <select id="globalCategory" name="globalCategory" class="w-full px-4 py-2.5 bg-slate-100 border border-slate-300 rounded-lg focus:border-primary focus:ring-1 focus:ring-primary">
+                <label class="text-sm font-medium text-slate-800 block mb-2">Kategori</label>
+                <select id="globalCategory" name="globalCategory" class="w-full px-4 py-2 bg-slate-100 border border-slate-300 rounded-lg focus:border-primary focus:ring-1 focus:ring-primary">
                   <option value="22">People & Blogs</option>
                   <option value="20">Gaming</option>
                   <option value="24">Entertainment</option>
@@ -101,19 +139,63 @@
                   <option value="27">Education</option>
                 </select>
               </div>
+              <div>
+                <label class="text-sm font-medium text-slate-800 block mb-2">Tags</label>
+                <input type="text" id="globalTags" class="w-full px-4 py-2 bg-slate-100 border border-slate-300 rounded-lg focus:border-primary focus:ring-1 focus:ring-primary" placeholder="tag1, tag2, tag3...">
+              </div>
             </div>
+            
+            <div class="flex items-start gap-2 pt-2 border-t border-slate-100">
+              <input type="checkbox" id="globalClosedCaptions" class="mt-1 w-4 h-4 text-primary border-slate-300 rounded focus:ring-primary">
+              <label for="globalClosedCaptions" class="text-sm text-slate-700">
+                <span class="font-medium block">Auto-Generated Subtitles</span>
+                <span class="text-xs text-slate-500">Aktifkan Closed Captions (Subtitle) otomatis dari YouTube</span>
+              </label>
+            </div>
+            <p class="text-xs text-slate-500 italic mt-2">Default: metadata diambil dari nama file & pengaturan akun YouTube anda.</p>
          </div>
       </div>
       
       <!-- VodAfterLiveCard -->
       <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-         <div class="px-5 py-4 border-b border-slate-200/60 bg-slate-50/50">
+         <div class="px-5 py-4 border-b border-slate-200/60 bg-slate-50/50 flex justify-between items-center cursor-pointer" onclick="document.getElementById('vodBody').classList.toggle('hidden')">
             <h3 class="text-sm font-semibold text-slate-800 flex items-center gap-2">
-               <i class="ti ti-video text-indigo-500"></i> VOD After Live
+               <i class="ti ti-video text-indigo-500"></i> VOD After Live <span class="bg-indigo-100 text-indigo-600 text-[10px] px-2 py-0.5 rounded-full ml-2">Setelah stream selesai</span>
             </h3>
+            <i class="ti ti-chevron-down text-slate-400"></i>
          </div>
-         <div class="p-5">
-            <p class="text-sm text-slate-500">Pengaturan VOD setelah stream selesai akan ditambahkan di update berikutnya.</p>
+         <div class="p-5 space-y-4" id="vodBody">
+            <p class="text-sm text-slate-600">Atur apa yang terjadi pada rekaman stream setelah live selesai.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+               <div>
+                  <label class="text-sm font-medium text-slate-800 block mb-2">Visibilitas VOD</label>
+                  <select class="w-full px-4 py-2 bg-slate-100 border border-slate-300 rounded-lg focus:border-primary focus:ring-1 focus:ring-primary">
+                     <option>🔗 Unlisted — Hanya yang punya link</option>
+                  </select>
+               </div>
+               <div>
+                  <label class="text-sm font-medium text-slate-800 block mb-2">Tunda Publish VOD</label>
+                  <select class="w-full px-4 py-2 bg-slate-100 border border-slate-300 rounded-lg focus:border-primary focus:ring-1 focus:ring-primary">
+                     <option>Langsung (segera setelah live)</option>
+                  </select>
+               </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+               <div class="flex items-start gap-2 p-3 border border-slate-200 rounded-lg bg-slate-50">
+                  <input type="checkbox" checked class="mt-1 w-4 h-4 text-primary border-slate-300 rounded focus:ring-primary">
+                  <label class="text-sm text-slate-700">
+                    <span class="font-medium block">Auto Chapter</span>
+                    <span class="text-xs text-slate-500">Bagi VOD ke chapter otomatis</span>
+                  </label>
+               </div>
+               <div class="flex items-start gap-2 p-3 border border-slate-200 rounded-lg bg-slate-50">
+                  <input type="checkbox" class="mt-1 w-4 h-4 text-primary border-slate-300 rounded focus:ring-primary">
+                  <label class="text-sm text-slate-700">
+                    <span class="font-medium block">Auto Highlight Clip</span>
+                    <span class="text-xs text-slate-500">Buat clip highlight otomatis</span>
+                  </label>
+               </div>
+            </div>
          </div>
       </div>
     </div>
@@ -122,77 +204,150 @@
     <div class="lg:col-span-2 space-y-3 sm:space-y-5">
       <!-- ThumbnailSettingsCard -->
       <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-         <div class="px-5 py-4 border-b border-slate-200/60 bg-slate-50/50">
+         <div class="px-5 py-3 border-b border-slate-200/60 bg-yellow-50/50">
             <h3 class="text-sm font-semibold text-slate-800 flex items-center gap-2">
-               <i class="ti ti-photo text-teal-500"></i> Pengaturan Thumbnail
+               <i class="ti ti-photo text-yellow-500"></i> Program Tumbnail
             </h3>
          </div>
-         <div class="p-5">
-             <p class="text-xs text-slate-500">Thumbnail dapat diatur pada masing-masing item video di bagian bawah.</p>
+         <div class="p-4">
+            <div class="thumbnail-upload-area relative border-2 border-dashed border-slate-300 rounded-lg hover:border-primary bg-slate-50 transition-colors cursor-pointer group h-32 flex flex-col items-center justify-center overflow-hidden" onclick="document.getElementById('globalThumbnail').click()">
+              <input type="file" id="globalThumbnail" class="hidden" accept="image/jpeg,image/png,image/webp">
+              <div class="thumbnail-placeholder text-center px-4 z-10">
+                <div class="w-10 h-10 mx-auto bg-white rounded-full shadow-sm flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                  <i class="ti ti-photo-plus text-xl text-slate-400 group-hover:text-primary"></i>
+                </div>
+                <p class="text-xs text-slate-500 font-medium">Upload Thumbnail</p>
+                <p class="text-[10px] text-slate-400 mt-0.5">Disarankan 1280x720 (Max 2MB)</p>
+              </div>
+              <div class="thumbnail-preview hidden absolute inset-0 z-20 bg-black">
+                <img id="globalThumbnailPreview" src="" class="w-full h-full object-contain">
+                <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-opacity">
+                  <i class="ti ti-edit text-white text-2xl mb-1"></i>
+                  <span class="text-white text-xs font-medium">Ubah Gambar</span>
+                </div>
+              </div>
+            </div>
          </div>
       </div>
       
       <!-- SchedulePublishCard -->
       <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-         <div class="px-5 py-4 border-b border-slate-200/60 bg-slate-50/50">
+         <div class="px-5 py-3 border-b border-slate-200/60 bg-slate-50/50">
             <h3 class="text-sm font-semibold text-slate-800 flex items-center gap-2">
-               <i class="ti ti-calendar-time text-orange-500"></i> Atur Penjadwal & Publish
+               <i class="ti ti-calendar-time text-slate-500"></i> Atur Penjadwal & Publish
             </h3>
          </div>
-         <div class="p-5 space-y-4">
-            <div class="flex items-center gap-2 mb-2">
-              <span id="rotationServerTime" class="bg-slate-100 text-xs text-slate-600 px-2 py-0.5 rounded border border-slate-200">Server time: loading...</span>
-            </div>
-            <div>
-              <label class="text-sm font-medium text-slate-800 block mb-2">Mode Pengulangan</label>
-              <select id="repeatMode" name="repeatMode" class="w-full px-4 py-2.5 bg-slate-100 border border-slate-300 rounded-lg focus:border-primary focus:ring-1 focus:ring-primary">
-                <option value="daily" selected>Setiap Hari</option>
-                <option value="weekly">Setiap Minggu</option>
-                <option value="monthly">Setiap Bulan</option>
-              </select>
-            </div>
-            <div class="grid grid-cols-2 gap-4">
+         <div class="p-4 space-y-4">
+            <div class="grid grid-cols-2 gap-3">
               <div>
-                <label class="text-sm font-medium text-slate-800 block mb-2">Waktu Mulai</label>
-                <input type="time" id="rotationStartTime" name="rotationStartTime" class="w-full px-4 py-2.5 bg-slate-100 border border-slate-300 rounded-lg focus:border-primary focus:ring-1 focus:ring-primary [color-scheme:dark]" required>
+                <label class="text-[11px] font-medium text-slate-600 block mb-1">Jadwal Mulai</label>
+                <input type="date" id="rotationStartDate" class="w-full px-3 py-1.5 text-sm bg-slate-50 border border-slate-300 rounded focus:border-primary focus:ring-1 focus:ring-primary">
               </div>
               <div>
-                <label class="text-sm font-medium text-slate-800 block mb-2">Waktu Selesai</label>
-                <input type="time" id="rotationEndTime" name="rotationEndTime" class="w-full px-4 py-2.5 bg-slate-100 border border-slate-300 rounded-lg focus:border-primary focus:ring-1 focus:ring-primary [color-scheme:dark]" required>
+                <label class="text-[11px] font-medium text-slate-600 block mb-1">Jadwal Selesai</label>
+                <input type="date" id="rotationEndDate" class="w-full px-3 py-1.5 text-sm bg-slate-50 border border-slate-300 rounded focus:border-primary focus:ring-1 focus:ring-primary">
               </div>
             </div>
-            <div>
-               <span id="rotationDurationBadge" class="bg-sky-50 text-sky-700 border border-sky-200 text-xs font-semibold px-2.5 py-1 rounded">Durasi: 00:00</span>
+            
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="text-[11px] font-medium text-slate-600 block mb-1">Repeat Mode</label>
+                <select id="repeatMode" name="repeatMode" class="w-full px-3 py-1.5 text-sm bg-slate-50 border border-slate-300 rounded focus:border-primary focus:ring-1 focus:ring-primary">
+                  <option value="none">Tidak Diulang</option>
+                  <option value="daily" selected>Setiap Hari</option>
+                  <option value="weekly">Setiap Minggu</option>
+                  <option value="monthly">Setiap Bulan</option>
+                </select>
+              </div>
+              <div>
+                <label class="text-[11px] font-medium text-slate-600 block mb-1">Pengulangan Waktu / 24 Jam</label>
+                <div class="flex items-center gap-1">
+                  <input type="time" id="rotationStartTime" name="rotationStartTime" class="w-full px-2 py-1.5 text-sm bg-slate-50 border border-slate-300 rounded focus:border-primary focus:ring-1 focus:ring-primary" required>
+                  <span class="text-slate-400">-</span>
+                  <input type="time" id="rotationEndTime" name="rotationEndTime" class="w-full px-2 py-1.5 text-sm bg-slate-50 border border-slate-300 rounded focus:border-primary focus:ring-1 focus:ring-primary" required>
+                </div>
+              </div>
+            </div>
+            
+            <div class="flex items-start gap-2 pt-2">
+              <input type="checkbox" id="autoPublish" class="mt-0.5 w-3.5 h-3.5 text-primary border-slate-300 rounded focus:ring-primary">
+              <label for="autoPublish" class="text-[11px] text-slate-600">Auto Publish saat jadwal mulai tercapai</label>
+            </div>
+            
+            <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-between">
+               <div>
+                 <span class="text-sm font-medium text-slate-700 block">Acak +/- 15 mnt (Anti-Spam)</span>
+                 <span class="text-[10px] text-slate-500">Mengacak waktu mulai/selesai agar tidak terdeteksi spam oleh YouTube</span>
+               </div>
+               <label class="relative inline-flex items-center cursor-pointer">
+                 <input type="checkbox" id="randomizeTime" class="sr-only peer">
+                 <div class="w-9 h-5 bg-slate-200 rounded-full peer peer-checked:bg-primary"></div>
+                 <div class="absolute left-[2px] top-[2px] w-4 h-4 bg-white rounded-full transition-all peer-checked:translate-x-4 shadow"></div>
+               </label>
             </div>
          </div>
       </div>
       
       <!-- ContentAICard -->
       <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-         <div class="px-5 py-4 border-b border-slate-200/60 bg-violet-50/50">
+         <div class="px-5 py-3 border-b border-slate-200/60 bg-violet-50/50 flex justify-between items-center cursor-pointer" onclick="document.getElementById('aiBody').classList.toggle('hidden')">
             <h3 class="text-sm font-semibold text-slate-800 flex items-center gap-2">
-               <i class="ti ti-sparkles text-violet-500"></i> Content AI Generator
+               <i class="ti ti-sparkles text-violet-500"></i> Content AI <span class="bg-white border border-slate-200 text-slate-500 text-[10px] px-2 py-0.5 rounded-full ml-2">VidIQ-style</span>
             </h3>
+            <i class="ti ti-chevron-down text-slate-400"></i>
          </div>
-         <div class="p-5">
-            <p class="text-xs text-slate-500">Generator AI tersedia di setiap pengaturan item video.</p>
+         <div class="p-4 space-y-4" id="aiBody">
+            <div class="flex bg-slate-100 p-1 rounded-lg">
+               <button type="button" class="flex-1 py-1.5 text-xs font-medium bg-white shadow-sm rounded text-slate-800 flex items-center justify-center gap-1"><i class="ti ti-sparkles text-violet-500"></i> Gemini</button>
+               <button type="button" class="flex-1 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-800 flex items-center justify-center gap-1"><i class="ti ti-message-chatbot"></i> ChatGPT</button>
+            </div>
+            
+            <div>
+              <label class="text-[11px] font-medium text-slate-600 block mb-1">Topik / Konteks Stream <span class="text-red-500">*</span></label>
+              <input type="text" id="aiTopic" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-300 rounded focus:border-primary focus:ring-1 focus:ring-primary" placeholder="Contoh: Mountain River Waterfall, Live musik Jazz malam...">
+            </div>
+            
+            <button type="button" class="text-xs text-primary hover:text-blue-700 font-medium flex items-center gap-1"><i class="ti ti-plus"></i> Tambah Judul Referensi Kompetitor</button>
+            
+            <div class="grid grid-cols-3 gap-2">
+               <div>
+                  <label class="text-[10px] font-medium text-slate-600 block mb-1">Bahasa</label>
+                  <select class="w-full px-2 py-1.5 text-[11px] bg-slate-50 border border-slate-300 rounded"><option>🌐 Auto Detect</option></select>
+               </div>
+               <div>
+                  <label class="text-[10px] font-medium text-slate-600 block mb-1">Gaya</label>
+                  <select class="w-full px-2 py-1.5 text-[11px] bg-slate-50 border border-slate-300 rounded"><option>😊 Santai</option></select>
+               </div>
+               <div>
+                  <label class="text-[10px] font-medium text-slate-600 block mb-1">Jumlah Judul</label>
+                  <select class="w-full px-2 py-1.5 text-[11px] bg-slate-50 border border-slate-300 rounded"><option>3 Variasi</option></select>
+               </div>
+            </div>
+            
+            <button type="button" onclick="generateGlobalAI()" class="w-full py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-medium rounded-lg flex items-center justify-center gap-2 transition-colors">
+               <i class="ti ti-sparkles"></i> Generate dengan AI
+            </button>
          </div>
       </div>
       
       <!-- MonetizationCard -->
       <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-         <div class="px-5 py-4 border-b border-slate-200/60 bg-green-50/50">
+         <div class="px-5 py-3 bg-green-50/50 flex justify-between items-center cursor-pointer" onclick="document.getElementById('monetizationBody').classList.toggle('hidden')">
             <h3 class="text-sm font-semibold text-slate-800 flex items-center gap-2">
-               <i class="ti ti-currency-dollar text-green-500"></i> Monetisasi
+               <span class="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center text-green-600"><i class="ti ti-currency-dollar text-xs"></i></span> Monetisasi Stream
             </h3>
+            <i class="ti ti-chevron-down text-slate-400"></i>
          </div>
-         <div class="p-5">
-            <div class="h-[42px] px-4 bg-slate-100 border border-slate-300 rounded-lg flex items-center justify-between">
-              <span class="text-sm text-slate-600">Aktifkan Monetisasi</span>
+         <div class="p-4 border-t border-slate-100 hidden" id="monetizationBody">
+            <div class="flex items-center justify-between">
+              <div>
+                <span class="text-sm font-medium text-slate-700 block">YouTube Partner Monetization</span>
+                <span class="text-[10px] text-slate-500">Aktifkan iklan pada stream ini</span>
+              </div>
               <label class="relative inline-flex items-center cursor-pointer">
                 <input type="checkbox" id="globalMonetization" name="globalMonetization" class="sr-only peer">
-                <div class="w-11 h-6 bg-slate-50 rounded-full peer peer-checked:bg-primary border border-slate-200"></div>
-                <div class="absolute left-[2px] top-[2px] w-5 h-5 bg-white rounded-full transition-all peer-checked:translate-x-5 shadow"></div>
+                <div class="w-9 h-5 bg-slate-200 rounded-full peer peer-checked:bg-green-500"></div>
+                <div class="absolute left-[2px] top-[2px] w-4 h-4 bg-white rounded-full transition-all peer-checked:translate-x-4 shadow"></div>
               </label>
             </div>
          </div>
@@ -200,42 +355,32 @@
       
       <!-- OverlayWatermarkCard -->
       <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-         <div class="px-5 py-4 border-b border-slate-200/60 bg-slate-50/50">
-            <h3 class="text-sm font-semibold text-slate-800 flex items-center gap-2">
-               <i class="ti ti-layers-intersect text-pink-500"></i> Dynamic Overlays & Watermark
+         <div class="px-5 py-3 flex justify-between items-center cursor-pointer" onclick="document.getElementById('overlayBody').classList.toggle('hidden')">
+            <h3 class="text-xs font-semibold text-slate-700 flex items-center gap-2">
+               <i class="ti ti-layers-intersect text-pink-500"></i> Dynamic Overlays & Watermark (Opsional)
             </h3>
+            <i class="ti ti-chevron-down text-slate-400"></i>
          </div>
-         <div class="p-5">
-            <p class="text-xs text-slate-500">Fitur kustom watermark akan segera hadir.</p>
+         <div class="p-4 border-t border-slate-100 hidden" id="overlayBody">
+            <p class="text-[11px] text-slate-500">Fitur overlay dinamis akan segera hadir.</p>
          </div>
       </div>
       
       <!-- TranscoderOutputCard -->
       <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-         <div class="px-5 py-4 border-b border-slate-200/60 bg-slate-50/50">
-            <h3 class="text-sm font-semibold text-slate-800 flex items-center gap-2">
+         <div class="px-5 py-3 flex justify-between items-center cursor-pointer" onclick="document.getElementById('transcoderBody').classList.toggle('hidden')">
+            <h3 class="text-xs font-semibold text-slate-700 flex items-center gap-2">
                <i class="ti ti-cpu text-blue-500"></i> Transkoder & Output
             </h3>
+            <i class="ti ti-chevron-down text-slate-400"></i>
          </div>
-         <div class="p-5">
-            <p class="text-xs text-slate-500">Pengaturan resolusi hardware akan segera hadir.</p>
+         <div class="p-4 border-t border-slate-100 hidden" id="transcoderBody">
+            <div class="flex items-center gap-2">
+              <input type="checkbox" id="shQvToggle" class="w-3.5 h-3.5 text-primary border-slate-300 rounded focus:ring-primary">
+              <label for="shQvToggle" class="text-[11px] text-slate-600">ShQv (Eksperimental)</label>
+            </div>
          </div>
       </div>
-    </div>
-  </div>
-  
-  <!-- SchedulerPreviewCard -->
-  <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mt-6">
-    <div class="px-5 py-4 border-b border-slate-200/60 bg-slate-50/50 flex justify-between items-center">
-      <h3 class="text-sm font-semibold text-slate-800 flex items-center gap-2">
-         <i class="ti ti-list-details text-primary"></i> Daftar Video / Item Rotasi
-      </h3>
-    </div>
-    <div class="p-5">
-       <div id="rotationItemsContainer" class="space-y-4"></div>
-       <button type="button" onclick="addRotationItem()" class="mt-4 w-full flex items-center justify-center gap-2 px-4 py-3 bg-slate-50 hover:bg-slate-100 border-2 border-dashed border-slate-300 hover:border-slate-400 text-slate-600 hover:text-slate-900 rounded-lg transition-colors font-medium">
-         <i class="ti ti-plus"></i> Tambah Item Video
-       </button>
     </div>
   </div>
 </form>
@@ -630,7 +775,599 @@
 const videos = <%- JSON.stringify(typeof videos !== 'undefined' ? videos : []) %>;
 const playlists = <%- JSON.stringify(typeof playlists !== 'undefined' ? playlists : []) %>;
 const csrfToken = '<%= csrfToken %>';
-let rotationItemCount = 0;
+
+// populate video multi-select
+const globalVideos = document.getElementById('globalVideos');
+if (globalVideos) {
+  videos.forEach(v => {
+    const opt = document.createElement('option');
+    opt.value = v.id;
+    opt.textContent = v.title;
+    globalVideos.appendChild(opt);
+  });
+  playlists.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = 'playlist:' + p.id;
+    opt.textContent = '[Playlist] ' + p.name;
+    globalVideos.appendChild(opt);
+  });
+}
+
+function updateRotationServerTime() {
+  fetch('/api/server-time')
+    .then(response => response.json())
+    .then(data => {
+      const serverTimeEl = document.getElementById('rotationServerTime');
+      if (serverTimeEl && data.formattedTime) {
+        serverTimeEl.textContent = `Server time: ${data.formattedTime}`;
+      }
+    })
+    .catch(error => console.error('Error fetching server time:', error));
+}
+
+updateRotationServerTime();
+setInterval(updateRotationServerTime, 1000);
+
+function calculateDuration() {
+  const startTime = document.getElementById('rotationStartTime').value;
+  const endTime = document.getElementById('rotationEndTime').value;
+  const badge = document.getElementById('rotationDurationBadge');
+  
+  if (!startTime || !endTime) {
+    badge.textContent = 'Durasi: 00:00';
+    return;
+  }
+
+  const start = new Date(`2000-01-01T${startTime}:00`);
+  let end = new Date(`2000-01-01T${endTime}:00`);
+  
+  if (end < start) {
+    end.setDate(end.getDate() + 1);
+  }
+  
+  const diffMs = end - start;
+  const diffHrs = Math.floor(diffMs / 3600000);
+  const diffMins = Math.floor((diffMs % 3600000) / 60000);
+  
+  badge.textContent = `Durasi: ${String(diffHrs).padStart(2, '0')}:${String(diffMins).padStart(2, '0')}`;
+}
+
+document.getElementById('rotationStartTime').addEventListener('input', calculateDuration);
+document.getElementById('rotationEndTime').addEventListener('input', calculateDuration);
+
+function showToast(type, message) {
+  const toast = document.getElementById('toast');
+  const icon = document.getElementById('toast-icon');
+  const msg = document.getElementById('toast-message');
+  
+  toast.className = `fixed top-16 right-4 px-4 py-3 rounded-lg shadow-lg z-50 flex items-center border-l-4 transition-opacity duration-300 ${
+    type === 'success' ? 'bg-white border-green-500 text-slate-800' : 'bg-white border-red-500 text-slate-800'
+  }`;
+  
+  icon.className = type === 'success' ? 'ti ti-check text-green-500 mr-2 text-lg' : 'ti ti-alert-circle text-red-500 mr-2 text-lg';
+  msg.textContent = message;
+  
+  toast.classList.remove('hidden');
+  
+  setTimeout(() => {
+    toast.classList.add('opacity-0');
+    setTimeout(() => {
+      toast.classList.add('hidden');
+      toast.classList.remove('opacity-0');
+    }, 300);
+  }, 3000);
+}
+
+function toggleRotationChannelDropdown() {
+  const dropdown = document.getElementById('rotationChannelDropdown');
+  if (dropdown) dropdown.classList.toggle('hidden');
+}
+
+function selectRotationChannel(channelId, channelName, channelThumbnail) {
+  document.getElementById('rotationChannelId').value = channelId;
+  document.getElementById('rotationChannelThumb').src = channelThumbnail;
+  document.getElementById('rotationChannelName').textContent = channelName;
+  toggleRotationChannelDropdown();
+}
+
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('#rotationChannelSelector')) {
+    const dropdown = document.getElementById('rotationChannelDropdown');
+    if (dropdown) dropdown.classList.add('hidden');
+  }
+});
+
+function resetForm() {
+  document.getElementById('rotationForm').reset();
+  document.getElementById('rotationId').value = '';
+  const videoSelect = document.getElementById('globalVideos');
+  if (videoSelect) {
+    Array.from(videoSelect.options).forEach(opt => opt.selected = false);
+  }
+  document.getElementById('globalMonetization').checked = false;
+  document.getElementById('repeatMode').value = 'daily';
+  
+  const preview = document.getElementById('globalThumbnailPreview');
+  if (preview) {
+    preview.src = '';
+    preview.parentElement.classList.add('hidden');
+    preview.parentElement.previousElementSibling.classList.remove('hidden');
+    document.getElementById('globalThumbnail').dataset.existingPath = '';
+    document.getElementById('globalThumbnail').dataset.originalPath = '';
+  }
+  
+  const channelSelectorBtn = document.querySelector('#rotationChannelSelector > button');
+  if (channelSelectorBtn) {
+    channelSelectorBtn.disabled = false;
+    channelSelectorBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+    channelSelectorBtn.onclick = toggleRotationChannelDropdown;
+    channelSelectorBtn.title = '';
+  }
+  
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+async function compressRotationThumbnail(file) {
+  if (!file || !file.type.startsWith('image/')) {
+    return file;
+  }
+
+  try {
+    const imageUrl = URL.createObjectURL(file);
+    const image = await new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = imageUrl;
+    });
+
+    const MAX_WIDTH = 1280;
+    const MAX_HEIGHT = 720;
+    let width = image.width;
+    let height = image.height;
+
+    if (width > MAX_WIDTH || height > MAX_HEIGHT) {
+      if (width / height > MAX_WIDTH / MAX_HEIGHT) {
+        width = MAX_WIDTH;
+        height = Math.round(MAX_WIDTH * (image.height / image.width));
+      } else {
+        height = MAX_HEIGHT;
+        width = Math.round(MAX_HEIGHT * (image.width / image.height));
+      }
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(image, 0, 0, width, height);
+
+    const compressedBlob = await new Promise((resolve) => {
+      canvas.toBlob((blob) => {
+        resolve(blob);
+      }, 'image/jpeg', 0.85);
+    });
+
+    URL.revokeObjectURL(imageUrl);
+    return new File([compressedBlob], file.name.replace(/\.[^/.]+$/, "") + ".jpg", {
+      type: 'image/jpeg',
+      lastModified: Date.now(),
+    });
+  } catch (error) {
+    console.error('Error compressing thumbnail:', error);
+    return file;
+  }
+}
+
+// Global Thumbnail preview handler
+const globalThumbnailInput = document.getElementById('globalThumbnail');
+if (globalThumbnailInput) {
+  globalThumbnailInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const preview = document.getElementById('globalThumbnailPreview');
+        preview.src = ev.target.result;
+        preview.parentElement.classList.remove('hidden');
+        preview.parentElement.previousElementSibling.classList.add('hidden');
+        globalThumbnailInput.dataset.existingPath = '';
+        globalThumbnailInput.dataset.originalPath = '';
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+}
+
+async function saveRotation() {
+  const rotationId = document.getElementById('rotationId').value;
+  const name = document.getElementById('rotationName').value;
+  
+  // Get multiple videos
+  const globalVideosEl = document.getElementById('globalVideos');
+  const selectedVideoIds = Array.from(globalVideosEl.selectedOptions).map(opt => opt.value);
+  
+  if (!name) {
+    showToast('error', 'Please enter rotation name');
+    return;
+  }
+  if (selectedVideoIds.length === 0) {
+    showToast('error', 'Please select at least one video');
+    return;
+  }
+  
+  const repeatMode = document.getElementById('repeatMode').value;
+  const startTime = document.getElementById('rotationStartTime').value;
+  const endTime = document.getElementById('rotationEndTime').value;
+  
+  if (!startTime || !endTime) {
+    showToast('error', 'Please set start and end time');
+    return;
+  }
+  
+  const saveBtn = document.getElementById('saveRotationBtn');
+  if(saveBtn){
+    const originalBtnText = saveBtn.innerHTML;
+    saveBtn.innerHTML = '<i class="ti ti-loader animate-spin font-loaded"></i> Saving...';
+    saveBtn.disabled = true;
+    saveBtn.classList.add('opacity-70', 'cursor-not-allowed');
+    window._resetSaveBtn = function() {
+      saveBtn.innerHTML = originalBtnText;
+      saveBtn.disabled = false;
+      saveBtn.classList.remove('opacity-70', 'cursor-not-allowed');
+    }
+  } else {
+    window._resetSaveBtn = function() {}
+  }
+  
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  
+  // Check custom start/end dates
+  const startDateInput = document.getElementById('rotationStartDate').value;
+  const endDateInput = document.getElementById('rotationEndDate').value;
+  
+  const startDay = startDateInput || `${year}-${month}-${day}`;
+  const endDay = endDateInput || startDay;
+
+  const startDateTime = new Date(`${startDay}T${startTime}:00`);
+  const endDateTime = new Date(`${endDay}T${endTime}:00`);
+  
+  const formatLocalDateTime = (date) => {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    const h = String(date.getHours()).padStart(2, '0');
+    const min = String(date.getMinutes()).padStart(2, '0');
+    const s = String(date.getSeconds()).padStart(2, '0');
+    return `${y}-${m}-${d}T${h}:${min}:${s}`;
+  };
+  
+  const startDateTimeStr = formatLocalDateTime(startDateTime);
+  const endDateTimeStr = formatLocalDateTime(endDateTime);
+  
+  // Global Metadata
+  const globalPrivacy = document.getElementById('globalPrivacy').value;
+  const globalCategory = document.getElementById('globalCategory').value;
+  const globalMonetization = document.getElementById('globalMonetization').checked;
+  const globalClosedCaptions = document.getElementById('globalClosedCaptions').checked;
+  const globalTags = document.getElementById('globalTags').value;
+  const globalDescription = document.getElementById('globalDescription').value;
+  
+  // Global Titles (one per line)
+  const titlesRaw = document.getElementById('globalTitles').value;
+  const titlesArray = titlesRaw.split('\n').map(t => t.trim()).filter(t => t);
+  
+  const items = [];
+  const formData = new FormData();
+  
+  for (let i = 0; i < selectedVideoIds.length; i++) {
+    const videoId = selectedVideoIds[i];
+    
+    let title_alternatives = titlesArray.length > 1 ? titlesArray : null;
+    let title = titlesArray.length > 0 ? titlesArray[Math.floor(Math.random() * titlesArray.length)] : (name + ' #' + (i+1));
+    
+    // thumbnail logic
+    let thumbnailPath = null;
+    let originalThumbnailPath = null;
+    if (rotationId && globalThumbnailInput && globalThumbnailInput.dataset.existingPath) {
+      thumbnailPath = globalThumbnailInput.dataset.existingPath;
+      originalThumbnailPath = globalThumbnailInput.dataset.originalPath || null;
+    }
+
+    items.push({
+      order_index: i,
+      video_id: videoId,
+      title: title,
+      description: globalDescription,
+      privacy: globalPrivacy,
+      category: globalCategory,
+      youtube_monetization: globalMonetization,
+      youtube_closed_captions: globalClosedCaptions,
+      tags: globalTags,
+      thumbnail_upload_index: i === 0 ? 0 : -1, // Use first thumbnail for all
+      thumbnail_path: thumbnailPath,
+      original_thumbnail_path: originalThumbnailPath,
+      title_alternatives: title_alternatives
+    });
+  }
+  
+  if (globalThumbnailInput && globalThumbnailInput.files && globalThumbnailInput.files[0]) {
+    const compressedThumbnail = await compressRotationThumbnail(globalThumbnailInput.files[0]);
+    formData.append('thumbnail_0', compressedThumbnail, compressedThumbnail.name);
+  }
+  
+  const youtubeChannelId = document.getElementById('rotationChannelId').value;
+  
+  formData.append('name', name);
+  formData.append('repeat_mode', repeatMode);
+  formData.append('start_time', startDateTimeStr);
+  formData.append('end_time', endDateTimeStr);
+  formData.append('youtube_channel_id', youtubeChannelId);
+  formData.append('items', JSON.stringify(items));
+  
+  try {
+    const url = rotationId ? `/api/rotations/${rotationId}` : '/api/rotations';
+    const method = rotationId ? 'PUT' : 'POST';
+    
+    const response = await fetch(url, {
+      method,
+      headers: {
+        'X-CSRF-Token': csrfToken
+      },
+      body: formData
+    });
+
+    let result;
+    const contentType = response.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      result = await response.json();
+    } else {
+      const errorText = await response.text();
+      result = {
+        success: false,
+        error: response.status === 413
+          ? 'Thumbnail upload is too large. Please use smaller images.'
+          : (errorText || `Request failed with status ${response.status}`)
+      };
+    }
+    
+    if (response.ok && result.success) {
+      showToast('success', rotationId ? 'Rotation updated!' : 'Rotation created!');
+      setTimeout(() => window.location.reload(), 1000);
+    } else {
+      showToast('error', result.error || 'Failed to save rotation');
+      window._resetSaveBtn();
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    showToast('error', 'An error occurred');
+    window._resetSaveBtn();
+  }
+}
+
+async function editRotation(id) {
+  try {
+    const response = await fetch(`/api/rotations/${id}`);
+    const result = await response.json();
+    
+    if (result.success) {
+      const rotation = result.rotation;
+      
+      document.getElementById('rotationId').value = rotation.id;
+      document.getElementById('rotationName').value = rotation.name;
+      document.getElementById('repeatMode').value = rotation.repeat_mode || 'daily';
+      
+      if (rotation.start_time) {
+        const d = new Date(rotation.start_time);
+        document.getElementById('rotationStartTime').value = d.toTimeString().slice(0, 5);
+        document.getElementById('rotationStartDate').value = d.toISOString().split('T')[0];
+      }
+      if (rotation.end_time) {
+        const d = new Date(rotation.end_time);
+        document.getElementById('rotationEndTime').value = d.toTimeString().slice(0, 5);
+        document.getElementById('rotationEndDate').value = d.toISOString().split('T')[0];
+      }
+      
+      calculateDuration();
+      
+      const videoSelect = document.getElementById('globalVideos');
+      Array.from(videoSelect.options).forEach(opt => opt.selected = false);
+      
+      let mainTitle = '';
+      let titleAlts = [];
+      
+      if (rotation.items && rotation.items.length > 0) {
+        const firstItem = rotation.items[0];
+        document.getElementById('globalPrivacy').value = firstItem.privacy || 'unlisted';
+        document.getElementById('globalCategory').value = firstItem.category || '22';
+        document.getElementById('globalMonetization').checked = firstItem.youtube_monetization === true || firstItem.youtube_monetization === 1;
+        document.getElementById('globalClosedCaptions').checked = firstItem.youtube_closed_captions === true || firstItem.youtube_closed_captions === 1;
+        document.getElementById('globalDescription').value = firstItem.description || '';
+        document.getElementById('globalTags').value = firstItem.tags || '';
+        
+        mainTitle = firstItem.title || '';
+        if (Array.isArray(firstItem.title_alternatives)) {
+          titleAlts = firstItem.title_alternatives;
+        }
+        
+        // Select videos
+        rotation.items.forEach(item => {
+          const opt = Array.from(videoSelect.options).find(o => o.value === String(item.video_id));
+          if (opt) opt.selected = true;
+        });
+        
+        // Load thumbnail
+        if (firstItem.thumbnail_path && firstItem.thumbnail_path !== 'rotations') {
+          const preview = document.getElementById('globalThumbnailPreview');
+          if (preview) {
+            preview.src = `/uploads/thumbnails/${firstItem.thumbnail_path.split('/').pop()}`;
+            preview.parentElement.classList.remove('hidden');
+            preview.parentElement.previousElementSibling.classList.add('hidden');
+            
+            document.getElementById('globalThumbnail').dataset.existingPath = firstItem.thumbnail_path;
+            document.getElementById('globalThumbnail').dataset.originalPath = firstItem.original_thumbnail_path || '';
+          }
+        }
+      } else {
+        document.getElementById('globalMonetization').checked = false;
+      }
+      
+      // Merge titles for textarea
+      const allTitles = titleAlts.length > 0 ? titleAlts : [mainTitle];
+      document.getElementById('globalTitles').value = allTitles.join('\n');
+      
+      if (rotation.youtube_channel_id) {
+        document.getElementById('rotationChannelId').value = rotation.youtube_channel_id;
+        if (rotation.youtube_channel_name) {
+          document.getElementById('rotationChannelName').textContent = rotation.youtube_channel_name;
+        }
+        if (rotation.youtube_channel_thumbnail) {
+          document.getElementById('rotationChannelThumb').src = rotation.youtube_channel_thumbnail;
+        }
+      }
+      
+      const channelSelectorBtn = document.querySelector('#rotationChannelSelector > button');
+      if (rotation.status === 'active') {
+        channelSelectorBtn.disabled = true;
+        channelSelectorBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        channelSelectorBtn.onclick = null;
+        channelSelectorBtn.title = 'Cannot change channel while running';
+      } else {
+        channelSelectorBtn.disabled = false;
+        channelSelectorBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        channelSelectorBtn.onclick = toggleRotationChannelDropdown;
+        channelSelectorBtn.title = '';
+      }
+      
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      showToast('error', 'Failed to load rotation');
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    showToast('error', 'An error occurred');
+  }
+}
+
+async function deleteRotation(id) {
+  if (!confirm('Are you sure you want to delete this rotation?')) {
+    return;
+  }
+  
+  try {
+    const response = await fetch(`/api/rotations/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'X-CSRF-Token': csrfToken
+      }
+    });
+    const result = await response.json();
+    
+    if (result.success) {
+      showToast('success', 'Rotation deleted successfully');
+      setTimeout(() => window.location.reload(), 1000);
+    } else {
+      showToast('error', result.error || 'Failed to delete rotation');
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    showToast('error', 'An error occurred');
+  }
+}
+
+async function activateRotation(id) {
+  try {
+    const response = await fetch(`/api/rotations/${id}/activate`, {
+      method: 'POST',
+      headers: { 'X-CSRF-Token': csrfToken }
+    });
+    const result = await response.json();
+    
+    if (result.success) {
+      showToast('success', 'Rotation activated');
+      setTimeout(() => window.location.reload(), 1000);
+    } else {
+      showToast('error', result.error || 'Failed to activate');
+    }
+  } catch (error) {
+    showToast('error', 'An error occurred');
+  }
+}
+
+async function stopRotation(id) {
+  try {
+    const response = await fetch(`/api/rotations/${id}/stop`, {
+      method: 'POST',
+      headers: { 'X-CSRF-Token': csrfToken }
+    });
+    const result = await response.json();
+    
+    if (result.success) {
+      showToast('success', 'Rotation stopped');
+      setTimeout(() => window.location.reload(), 1000);
+    } else {
+      showToast('error', result.error || 'Failed to stop');
+    }
+  } catch (error) {
+    showToast('error', 'An error occurred');
+  }
+}
+
+// Log Viewer Logic
+window.viewRotationLogs = async function(id) {
+  const modal = document.getElementById('rotationLogsModal');
+  const container = document.getElementById('rotationLogsContainer');
+  modal.classList.remove('hidden');
+  container.innerHTML = '<div class="flex items-center justify-center py-12 text-slate-400"><i class="ti ti-loader animate-spin text-2xl"></i></div>';
+  
+  try {
+    const res = await fetch(`/api/rotations/${id}/logs`);
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error);
+
+    if (!data.logs || data.logs.length === 0) {
+      container.innerHTML = `
+        <div class="flex flex-col items-center justify-center py-12 text-slate-400 text-sm">
+          <i class="ti ti-file-info text-4xl mb-2 text-slate-300"></i>
+          Belum ada log untuk rotasi ini.
+        </div>`;
+      return;
+    }
+
+    container.innerHTML = `<div class="space-y-3">` + data.logs.map(log => {
+      let icon = 'ti-info-circle text-blue-500 bg-blue-100';
+      if (log.action === 'start') icon = 'ti-player-play text-green-500 bg-green-100';
+      if (log.action === 'stop') icon = 'ti-player-stop text-amber-500 bg-amber-100';
+      if (log.action === 'error') icon = 'ti-alert-circle text-red-500 bg-red-100';
+      if (log.action === 'complete') icon = 'ti-check text-primary bg-sky-100';
+
+      const d = new Date(log.created_at);
+      const timeStr = d.toLocaleDateString('id-ID', { month:'short', day:'numeric' }) + ' ' + d.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+
+      return `
+        <div class="flex items-start gap-3 bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
+          <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${icon.split(' ')[2]}">
+            <i class="ti ${icon.split(' ').slice(0,2).join(' ')}"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold text-slate-800 uppercase">${log.action}</span>
+              <span class="text-[10px] text-slate-400">${timeStr}</span>
+            </div>
+            <p class="text-xs text-slate-600 mt-1">${log.message}</p>
+            ${log.duration_seconds ? `<div class="text-[10px] text-slate-400 mt-1"><i class="ti ti-clock"></i> Durasi: ${log.duration_seconds}s</div>` : ''}
+          </div>
+        </div>`;
+    }).join('') + `</div>`;
+
+  } catch(e) {
+    container.innerHTML = `<div class="p-4 text-center text-red-500 text-sm">Gagal memuat logs: ${e.message}</div>`;
+  }
+};
+/* DELETED OLD SCRIPT
 
 function updateRotationServerTime() {
   fetch('/api/server-time')
@@ -1922,4 +2659,5 @@ window.viewRotationLogs = async function(id) {
     container.innerHTML = `<div class="p-4 text-center text-red-500 text-sm">Gagal memuat logs: ${e.message}</div>`;
   }
 };
+*/
 </script>
