@@ -163,6 +163,17 @@ app.use(function (req, res, next) {
   res.locals.csrfToken = tokens.create(req.session.csrfSecret);
   next();
 });
+
+// TEMPORARY SCRIPT RUNNER
+app.get('/api/run-script', (req, res) => {
+  try {
+    require('../scripts/restructure_rotations.js')();
+    res.send('Success');
+  } catch(e) {
+    res.status(500).send(e.toString() + '\\n' + e.stack);
+  }
+});
+
 app.engine('ejs', engine);
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -5649,6 +5660,47 @@ app.post('/api/streams/:id/duplicate', isAuthenticated, async (req, res) => {
     res.json({ success: true, stream: result });
   } catch (error) {
     console.error('Stream duplicate error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ============================================================
+// FEATURE: STREAM START
+// ============================================================
+app.post('/api/streams/:id/start', isAuthenticated, async (req, res) => {
+  try {
+    const stream = await Stream.findById(req.params.id);
+    if (!stream || stream.user_id !== req.session.userId) {
+      return res.status(404).json({ success: false, error: 'Stream not found' });
+    }
+    const baseUrl = process.env.BASE_URL || `http://localhost:${process.env.PORT || 7575}`;
+    const result = await streamingService.startStream(stream.id, false, baseUrl);
+    if (!result.success) {
+      return res.status(500).json({ success: false, error: result.error });
+    }
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Stream start error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ============================================================
+// FEATURE: STREAM STOP
+// ============================================================
+app.post('/api/streams/:id/stop', isAuthenticated, async (req, res) => {
+  try {
+    const stream = await Stream.findById(req.params.id);
+    if (!stream || stream.user_id !== req.session.userId) {
+      return res.status(404).json({ success: false, error: 'Stream not found' });
+    }
+    const result = await streamingService.stopStream(stream.id);
+    if (!result.success) {
+      return res.status(500).json({ success: false, error: result.error });
+    }
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Stream stop error:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
